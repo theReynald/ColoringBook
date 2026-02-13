@@ -1,0 +1,1488 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>DoodleDream — Whimsical Storybook Coloring Book</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Baloo+2:wght@400;500;600;700&family=Patrick+Hand&display=swap" rel="stylesheet">
+<style>
+/* ============================================
+   CSS RESET & BASE
+   ============================================ */
+*, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
+
+:root {
+  --cream: #FFF8E7;
+  --cream-dark: #F5EDD6;
+  --soft-brown: #D4A574;
+  --brown-dark: #A67C52;
+  --storybook-red: #E74C3C;
+  --forest-green: #2ECC71;
+  --royal-blue: #3498DB;
+  --gold: #F1C40F;
+  --gold-dark: #D4A70A;
+  --ink: #3E2723;
+  --ink-light: #5D4037;
+  --page-shadow: rgba(62, 39, 35, 0.12);
+}
+
+html { scroll-behavior: smooth; }
+
+body {
+  font-family: 'Baloo 2', cursive, sans-serif;
+  background-color: var(--cream);
+  color: var(--ink);
+  min-height: 100vh;
+  overflow-x: hidden;
+  position: relative;
+}
+
+/* ============================================
+   PAPER TEXTURE BACKGROUND
+   ============================================ */
+body::before {
+  content: '';
+  position: fixed;
+  inset: 0;
+  background-image:
+    url("data:image/svg+xml,%3Csvg width='100' height='100' xmlns='http://www.w3.org/2000/svg'%3E%3Cfilter id='n'%3E%3CfeTurbulence type='fractalNoise' baseFrequency='0.75' numOctaves='4' stitchTiles='stitch'/%3E%3C/filter%3E%3Crect width='100' height='100' filter='url(%23n)' opacity='0.04'/%3E%3C/svg%3E");
+  pointer-events: none;
+  z-index: 0;
+}
+
+/* ============================================
+   SVG FILTERS FOR SKETCHY LOOK
+   ============================================ */
+.svg-filters {
+  position: absolute;
+  width: 0;
+  height: 0;
+  overflow: hidden;
+}
+
+/* ============================================
+   DOODLE DECORATIONS (MARGINS)
+   ============================================ */
+.doodle {
+  position: fixed;
+  pointer-events: none;
+  z-index: 1;
+  opacity: 0.15;
+  color: var(--soft-brown);
+}
+
+.doodle-star {
+  font-size: 2rem;
+  animation: twinkle 3s ease-in-out infinite;
+}
+
+.doodle-swirl {
+  font-size: 1.5rem;
+  animation: drift 6s ease-in-out infinite;
+}
+
+.doodle-flower {
+  font-size: 1.8rem;
+  animation: bloom 4s ease-in-out infinite;
+}
+
+@keyframes twinkle {
+  0%, 100% { opacity: 0.1; transform: scale(1) rotate(0deg); }
+  50% { opacity: 0.25; transform: scale(1.15) rotate(15deg); }
+}
+
+@keyframes drift {
+  0%, 100% { transform: translateY(0) rotate(0deg); }
+  50% { transform: translateY(-8px) rotate(10deg); }
+}
+
+@keyframes bloom {
+  0%, 100% { transform: scale(1); opacity: 0.12; }
+  50% { transform: scale(1.1); opacity: 0.2; }
+}
+
+/* ============================================
+   STORYBOOK PAGE FRAME
+   ============================================ */
+.storybook-wrapper {
+  position: relative;
+  z-index: 2;
+  max-width: 900px;
+  margin: 0 auto;
+  padding: 20px 16px 60px;
+}
+
+.storybook-page {
+  background: linear-gradient(135deg, #FFFDF5 0%, var(--cream) 40%, #FFF8E7 100%);
+  border-radius: 8px 24px 24px 8px;
+  box-shadow:
+    -6px 0 18px -4px var(--page-shadow),
+    6px 0 18px -4px var(--page-shadow),
+    0 12px 30px -8px rgba(62, 39, 35, 0.18),
+    inset -3px 0 8px -2px rgba(212, 165, 116, 0.15);
+  padding: 48px 40px 56px;
+  position: relative;
+  overflow: hidden;
+}
+
+/* Book spine effect */
+.storybook-page::before {
+  content: '';
+  position: absolute;
+  left: 0;
+  top: 0;
+  bottom: 0;
+  width: 28px;
+  background: linear-gradient(90deg,
+    rgba(212, 165, 116, 0.25) 0%,
+    rgba(212, 165, 116, 0.08) 40%,
+    transparent 100%);
+  border-right: 1.5px solid rgba(212, 165, 116, 0.15);
+}
+
+/* Page curl bottom-right */
+.storybook-page::after {
+  content: '';
+  position: absolute;
+  bottom: 0;
+  right: 0;
+  width: 50px;
+  height: 50px;
+  background: linear-gradient(225deg,
+    var(--cream-dark) 0%,
+    var(--cream-dark) 45%,
+    transparent 45.5%);
+  box-shadow: -3px -3px 6px -2px rgba(0,0,0,0.06);
+  border-radius: 0 0 24px 0;
+}
+
+/* Top-left page curl */
+.page-curl-top {
+  position: absolute;
+  top: 0;
+  right: 0;
+  width: 36px;
+  height: 36px;
+  background: linear-gradient(225deg,
+    transparent 0%,
+    transparent 48%,
+    var(--cream-dark) 48.5%,
+    #F0E6CE 100%);
+  border-radius: 0 22px 0 0;
+  z-index: 3;
+}
+
+/* ============================================
+   HEADER / TITLE
+   ============================================ */
+.app-header {
+  text-align: center;
+  margin-bottom: 36px;
+  position: relative;
+}
+
+.logo-area {
+  display: inline-block;
+  position: relative;
+}
+
+.app-title {
+  font-family: 'Patrick Hand', cursive;
+  font-size: clamp(2.6rem, 6vw, 3.8rem);
+  color: var(--ink);
+  letter-spacing: 1px;
+  line-height: 1.1;
+  position: relative;
+  display: inline-block;
+}
+
+.app-title .highlight-red { color: var(--storybook-red); }
+.app-title .highlight-blue { color: var(--royal-blue); }
+.app-title .highlight-green { color: var(--forest-green); }
+
+/* Hand-drawn underline */
+.title-underline {
+  display: block;
+  margin: 4px auto 0;
+  width: 85%;
+  height: 8px;
+}
+
+.title-underline path {
+  stroke: var(--gold);
+  stroke-width: 3.5;
+  fill: none;
+  stroke-linecap: round;
+}
+
+/* Decorative star near title */
+.title-star {
+  position: absolute;
+  top: -10px;
+  right: -30px;
+  width: 28px;
+  height: 28px;
+  animation: twinkle 2.5s ease-in-out infinite;
+}
+
+.subtitle {
+  font-family: 'Baloo 2', cursive;
+  font-size: 1.1rem;
+  color: var(--ink-light);
+  margin-top: 6px;
+  font-weight: 500;
+}
+
+/* decorative small arrow */
+.deco-arrow {
+  display: inline-block;
+  margin: 18px auto 0;
+  color: var(--soft-brown);
+  font-size: 1.3rem;
+  animation: bounce-down 2s ease-in-out infinite;
+  opacity: 0.5;
+}
+
+@keyframes bounce-down {
+  0%, 100% { transform: translateY(0); }
+  50% { transform: translateY(6px); }
+}
+
+/* ============================================
+   SECTION HEADERS
+   ============================================ */
+.section-header {
+  font-family: 'Patrick Hand', cursive;
+  font-size: 1.55rem;
+  color: var(--ink);
+  margin-bottom: 14px;
+  display: flex;
+  align-items: center;
+  gap: 10px;
+}
+
+.section-header .icon {
+  font-size: 1.3rem;
+}
+
+.wavy-line {
+  display: block;
+  width: 100%;
+  height: 6px;
+  margin-top: -6px;
+  margin-bottom: 16px;
+}
+
+.wavy-line path {
+  stroke: var(--gold);
+  stroke-width: 2.5;
+  fill: none;
+  stroke-linecap: round;
+  opacity: 0.6;
+}
+
+/* ============================================
+   SETTINGS PANEL (API KEY)
+   ============================================ */
+.settings-toggle {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  cursor: pointer;
+  background: none;
+  border: none;
+  font-family: 'Patrick Hand', cursive;
+  font-size: 1.15rem;
+  color: var(--ink-light);
+  padding: 8px 14px;
+  border-radius: 12px;
+  transition: all 0.25s;
+  margin-bottom: 8px;
+}
+
+.settings-toggle:hover {
+  background: rgba(212, 165, 116, 0.15);
+  color: var(--ink);
+}
+
+.settings-toggle .gear-icon {
+  font-size: 1.2rem;
+  transition: transform 0.4s;
+}
+
+.settings-toggle.open .gear-icon {
+  transform: rotate(90deg);
+}
+
+.settings-toggle .chevron {
+  font-size: 0.7rem;
+  transition: transform 0.3s;
+  margin-left: auto;
+}
+
+.settings-toggle.open .chevron {
+  transform: rotate(180deg);
+}
+
+.settings-panel {
+  max-height: 0;
+  overflow: hidden;
+  transition: max-height 0.4s ease, opacity 0.3s;
+  opacity: 0;
+}
+
+.settings-panel.open {
+  max-height: 200px;
+  opacity: 1;
+}
+
+.settings-inner {
+  background: rgba(212, 165, 116, 0.08);
+  border: 2px dashed rgba(212, 165, 116, 0.35);
+  border-radius: 14px;
+  padding: 18px 20px;
+  margin-bottom: 20px;
+}
+
+.api-key-label {
+  font-family: 'Patrick Hand', cursive;
+  font-size: 1.05rem;
+  color: var(--ink-light);
+  margin-bottom: 8px;
+  display: flex;
+  align-items: center;
+  gap: 6px;
+}
+
+.api-key-input-wrap {
+  display: flex;
+  gap: 10px;
+}
+
+.api-key-input {
+  flex: 1;
+  padding: 10px 14px;
+  border: 2.5px solid var(--soft-brown);
+  border-radius: 12px;
+  font-family: 'Baloo 2', cursive;
+  font-size: 0.95rem;
+  background: rgba(255, 255, 255, 0.7);
+  color: var(--ink);
+  outline: none;
+  transition: border-color 0.25s, box-shadow 0.25s;
+  filter: url(#sketchy-sm);
+}
+
+.api-key-input:focus {
+  border-color: var(--royal-blue);
+  box-shadow: 0 0 0 3px rgba(52, 152, 219, 0.15);
+}
+
+.api-key-input::placeholder {
+  color: rgba(93, 64, 55, 0.4);
+}
+
+.btn-save-key {
+  padding: 10px 20px;
+  background: var(--forest-green);
+  color: white;
+  border: none;
+  border-radius: 12px;
+  font-family: 'Patrick Hand', cursive;
+  font-size: 1.05rem;
+  cursor: pointer;
+  transition: all 0.2s;
+  white-space: nowrap;
+  filter: url(#sketchy-sm);
+  box-shadow: 2px 3px 0 rgba(0,0,0,0.1);
+}
+
+.btn-save-key:hover {
+  transform: translateY(-1px);
+  box-shadow: 2px 4px 0 rgba(0,0,0,0.14);
+}
+
+.key-status {
+  font-size: 0.85rem;
+  margin-top: 8px;
+  display: flex;
+  align-items: center;
+  gap: 5px;
+  color: var(--forest-green);
+  font-weight: 600;
+  opacity: 0;
+  transition: opacity 0.3s;
+}
+
+.key-status.visible {
+  opacity: 1;
+}
+
+/* ============================================
+   UPLOAD AREA — PICTURE FRAME STYLE
+   ============================================ */
+.upload-section {
+  margin-bottom: 30px;
+}
+
+.upload-frame {
+  position: relative;
+  border: 4px solid var(--soft-brown);
+  border-radius: 12px;
+  padding: 6px;
+  background: var(--cream);
+  box-shadow:
+    inset 0 0 0 2px rgba(212, 165, 116, 0.3),
+    4px 5px 0 rgba(0,0,0,0.06);
+  filter: url(#sketchy);
+}
+
+/* Ornate corners via pseudo-elements */
+.upload-frame .corner {
+  position: absolute;
+  width: 22px;
+  height: 22px;
+  border-color: var(--brown-dark);
+  z-index: 3;
+  opacity: 0.5;
+}
+
+.upload-frame .corner-tl {
+  top: -2px; left: -2px;
+  border-top: 3px solid;
+  border-left: 3px solid;
+  border-radius: 4px 0 0 0;
+}
+.upload-frame .corner-tr {
+  top: -2px; right: -2px;
+  border-top: 3px solid;
+  border-right: 3px solid;
+  border-radius: 0 4px 0 0;
+}
+.upload-frame .corner-bl {
+  bottom: -2px; left: -2px;
+  border-bottom: 3px solid;
+  border-left: 3px solid;
+  border-radius: 0 0 0 4px;
+}
+.upload-frame .corner-br {
+  bottom: -2px; right: -2px;
+  border-bottom: 3px solid;
+  border-right: 3px solid;
+  border-radius: 0 0 4px 0;
+}
+
+.upload-zone {
+  border: 3px dashed rgba(212, 165, 116, 0.5);
+  border-radius: 8px;
+  padding: 44px 28px;
+  text-align: center;
+  cursor: pointer;
+  transition: all 0.3s;
+  background: rgba(255, 255, 255, 0.3);
+  position: relative;
+}
+
+.upload-zone:hover,
+.upload-zone.drag-over {
+  border-color: var(--royal-blue);
+  background: rgba(52, 152, 219, 0.04);
+}
+
+.upload-zone.drag-over {
+  transform: scale(1.01);
+}
+
+.upload-zone.has-image {
+  padding: 16px;
+}
+
+.upload-icon {
+  font-size: 3rem;
+  margin-bottom: 8px;
+  display: block;
+  color: var(--soft-brown);
+  opacity: 0.7;
+}
+
+.upload-text {
+  font-family: 'Patrick Hand', cursive;
+  font-size: 1.25rem;
+  color: var(--ink-light);
+  margin-bottom: 4px;
+}
+
+.upload-hint {
+  font-size: 0.85rem;
+  color: rgba(93, 64, 55, 0.5);
+}
+
+.upload-input {
+  display: none;
+}
+
+/* Image preview */
+.preview-container {
+  display: none;
+  flex-direction: column;
+  align-items: center;
+  gap: 10px;
+}
+
+.preview-container.visible {
+  display: flex;
+}
+
+.preview-image {
+  max-width: 100%;
+  max-height: 340px;
+  border-radius: 8px;
+  box-shadow: 0 4px 14px rgba(0,0,0,0.08);
+  object-fit: contain;
+}
+
+.btn-change-image {
+  font-family: 'Patrick Hand', cursive;
+  font-size: 0.95rem;
+  color: var(--storybook-red);
+  background: none;
+  border: none;
+  cursor: pointer;
+  text-decoration: underline;
+  text-decoration-style: wavy;
+  text-decoration-color: rgba(231, 76, 60, 0.3);
+  transition: color 0.2s;
+}
+
+.btn-change-image:hover {
+  color: #C0392B;
+}
+
+/* Upload placeholder (hidden when image present) */
+.upload-placeholder { }
+.upload-placeholder.hidden { display: none; }
+
+/* ============================================
+   CONVERT BUTTON — CRAYON STYLE
+   ============================================ */
+.convert-section {
+  text-align: center;
+  margin: 28px 0 32px;
+}
+
+.btn-convert {
+  display: inline-flex;
+  align-items: center;
+  gap: 10px;
+  padding: 16px 40px;
+  background: linear-gradient(135deg, var(--storybook-red) 0%, #D44332 100%);
+  color: white;
+  border: none;
+  border-radius: 16px;
+  font-family: 'Patrick Hand', cursive;
+  font-size: 1.45rem;
+  cursor: pointer;
+  position: relative;
+  transition: all 0.25s;
+  box-shadow:
+    3px 4px 0 rgba(0,0,0,0.12),
+    inset 0 1px 0 rgba(255,255,255,0.2);
+  filter: url(#sketchy);
+  letter-spacing: 0.5px;
+}
+
+.btn-convert:hover:not(:disabled) {
+  transform: translateY(-2px) rotate(-0.5deg);
+  box-shadow:
+    4px 6px 0 rgba(0,0,0,0.14),
+    inset 0 1px 0 rgba(255,255,255,0.2);
+}
+
+.btn-convert:active:not(:disabled) {
+  transform: translateY(1px);
+  box-shadow:
+    1px 2px 0 rgba(0,0,0,0.12),
+    inset 0 1px 0 rgba(255,255,255,0.2);
+}
+
+.btn-convert:disabled {
+  opacity: 0.55;
+  cursor: not-allowed;
+}
+
+.btn-convert .sparkle {
+  font-size: 1.3rem;
+}
+
+/* Hand-drawn exclamation mark as visual guide */
+.convert-hint {
+  margin-top: 10px;
+  font-family: 'Patrick Hand', cursive;
+  font-size: 0.95rem;
+  color: var(--ink-light);
+  opacity: 0.6;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  gap: 6px;
+}
+
+/* ============================================
+   LOADING STATE — ANIMATED PENCIL
+   ============================================ */
+.loading-overlay {
+  display: none;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  padding: 50px 20px;
+  gap: 20px;
+}
+
+.loading-overlay.visible {
+  display: flex;
+}
+
+.pencil-animation {
+  position: relative;
+  width: 200px;
+  height: 60px;
+}
+
+.pencil {
+  position: absolute;
+  left: 0;
+  top: 10px;
+  width: 48px;
+  height: 16px;
+  animation: pencil-draw 1.8s ease-in-out infinite;
+}
+
+.pencil-body {
+  width: 36px;
+  height: 16px;
+  background: linear-gradient(180deg, #F7DC6F 0%, var(--gold) 50%, #D4A70A 100%);
+  border-radius: 2px 0 0 2px;
+  position: absolute;
+  left: 12px;
+  top: 0;
+}
+
+.pencil-tip {
+  width: 0;
+  height: 0;
+  border-top: 8px solid transparent;
+  border-bottom: 8px solid transparent;
+  border-right: 12px solid #D4A70A;
+  position: absolute;
+  left: 0;
+  top: 0;
+}
+
+.pencil-tip::after {
+  content: '';
+  position: absolute;
+  right: -12px;
+  top: -3px;
+  width: 0;
+  height: 0;
+  border-top: 3px solid transparent;
+  border-bottom: 3px solid transparent;
+  border-right: 5px solid var(--ink);
+}
+
+.pencil-eraser {
+  width: 8px;
+  height: 16px;
+  background: #E8A0BF;
+  border-radius: 0 3px 3px 0;
+  position: absolute;
+  right: -8px;
+  top: 0;
+}
+
+.pencil-line {
+  position: absolute;
+  bottom: 0;
+  left: 10px;
+  right: 10px;
+  height: 2.5px;
+  background: var(--ink);
+  border-radius: 2px;
+  opacity: 0.25;
+  transform-origin: left;
+  animation: draw-line 1.8s ease-in-out infinite;
+}
+
+@keyframes pencil-draw {
+  0% { left: 0; }
+  45% { left: 152px; }
+  50% { left: 152px; transform: scaleX(-1); }
+  95% { left: 0; transform: scaleX(-1); }
+  100% { left: 0; transform: scaleX(1); }
+}
+
+@keyframes draw-line {
+  0% { transform: scaleX(0); }
+  45% { transform: scaleX(1); }
+  55% { transform: scaleX(1); }
+  100% { transform: scaleX(0); }
+}
+
+.loading-text {
+  font-family: 'Patrick Hand', cursive;
+  font-size: 1.3rem;
+  color: var(--ink-light);
+  animation: pulse-text 1.5s ease-in-out infinite;
+}
+
+@keyframes pulse-text {
+  0%, 100% { opacity: 0.6; }
+  50% { opacity: 1; }
+}
+
+.loading-sub {
+  font-size: 0.9rem;
+  color: rgba(93, 64, 55, 0.5);
+}
+
+/* ============================================
+   RESULT SECTION
+   ============================================ */
+.result-section {
+  display: none;
+  margin-top: 10px;
+}
+
+.result-section.visible {
+  display: block;
+}
+
+.result-frame {
+  position: relative;
+  border: 4px solid var(--soft-brown);
+  border-radius: 12px;
+  padding: 6px;
+  background: white;
+  box-shadow:
+    inset 0 0 0 2px rgba(212, 165, 116, 0.2),
+    4px 5px 0 rgba(0,0,0,0.06);
+  filter: url(#sketchy);
+}
+
+.result-image {
+  width: 100%;
+  border-radius: 8px;
+  display: block;
+}
+
+.result-actions {
+  display: flex;
+  justify-content: center;
+  gap: 14px;
+  margin-top: 20px;
+  flex-wrap: wrap;
+}
+
+.btn-download {
+  display: inline-flex;
+  align-items: center;
+  gap: 8px;
+  padding: 14px 32px;
+  background: linear-gradient(135deg, var(--forest-green) 0%, #27AE60 100%);
+  color: white;
+  border: none;
+  border-radius: 14px;
+  font-family: 'Patrick Hand', cursive;
+  font-size: 1.25rem;
+  cursor: pointer;
+  transition: all 0.25s;
+  box-shadow:
+    3px 4px 0 rgba(0,0,0,0.1),
+    inset 0 1px 0 rgba(255,255,255,0.2);
+  filter: url(#sketchy);
+}
+
+.btn-download:hover {
+  transform: translateY(-2px) rotate(0.5deg);
+  box-shadow:
+    4px 6px 0 rgba(0,0,0,0.13),
+    inset 0 1px 0 rgba(255,255,255,0.2);
+}
+
+.btn-new {
+  display: inline-flex;
+  align-items: center;
+  gap: 8px;
+  padding: 14px 28px;
+  background: linear-gradient(135deg, var(--royal-blue) 0%, #2980B9 100%);
+  color: white;
+  border: none;
+  border-radius: 14px;
+  font-family: 'Patrick Hand', cursive;
+  font-size: 1.25rem;
+  cursor: pointer;
+  transition: all 0.25s;
+  box-shadow:
+    3px 4px 0 rgba(0,0,0,0.1),
+    inset 0 1px 0 rgba(255,255,255,0.2);
+  filter: url(#sketchy);
+}
+
+.btn-new:hover {
+  transform: translateY(-2px) rotate(-0.5deg);
+  box-shadow:
+    4px 6px 0 rgba(0,0,0,0.13),
+    inset 0 1px 0 rgba(255,255,255,0.2);
+}
+
+/* ============================================
+   ERROR STATE
+   ============================================ */
+.error-banner {
+  display: none;
+  background: rgba(231, 76, 60, 0.08);
+  border: 2px solid rgba(231, 76, 60, 0.3);
+  border-radius: 12px;
+  padding: 14px 18px;
+  margin-bottom: 18px;
+  font-size: 0.95rem;
+  color: var(--storybook-red);
+  align-items: flex-start;
+  gap: 10px;
+  filter: url(#sketchy-sm);
+}
+
+.error-banner.visible {
+  display: flex;
+}
+
+.error-banner .error-icon {
+  font-size: 1.2rem;
+  flex-shrink: 0;
+  margin-top: 1px;
+}
+
+.error-banner .error-close {
+  margin-left: auto;
+  background: none;
+  border: none;
+  cursor: pointer;
+  font-size: 1.1rem;
+  color: var(--storybook-red);
+  opacity: 0.6;
+  flex-shrink: 0;
+}
+
+.error-banner .error-close:hover {
+  opacity: 1;
+}
+
+/* ============================================
+   FOOTER
+   ============================================ */
+.app-footer {
+  text-align: center;
+  margin-top: 32px;
+  padding-top: 18px;
+  border-top: 2px dashed rgba(212, 165, 116, 0.25);
+  font-family: 'Patrick Hand', cursive;
+  font-size: 0.95rem;
+  color: rgba(93, 64, 55, 0.4);
+}
+
+.app-footer .heart {
+  color: var(--storybook-red);
+  display: inline-block;
+  animation: heartbeat 1.3s ease-in-out infinite;
+}
+
+@keyframes heartbeat {
+  0%, 100% { transform: scale(1); }
+  15% { transform: scale(1.2); }
+  30% { transform: scale(1); }
+  45% { transform: scale(1.15); }
+}
+
+/* ============================================
+   DECORATIVE ELEMENTS — SVG DOODLES
+   ============================================ */
+.margin-doodles {
+  position: fixed;
+  inset: 0;
+  pointer-events: none;
+  z-index: 1;
+  overflow: hidden;
+}
+
+.margin-doodles svg {
+  position: absolute;
+  opacity: 0.08;
+  stroke: var(--soft-brown);
+  fill: none;
+  stroke-linecap: round;
+  stroke-linejoin: round;
+}
+
+/* ============================================
+   TOAST NOTIFICATION
+   ============================================ */
+.toast {
+  position: fixed;
+  bottom: 24px;
+  left: 50%;
+  transform: translateX(-50%) translateY(100px);
+  background: var(--ink);
+  color: var(--cream);
+  padding: 12px 24px;
+  border-radius: 12px;
+  font-family: 'Patrick Hand', cursive;
+  font-size: 1.05rem;
+  box-shadow: 0 6px 20px rgba(0,0,0,0.2);
+  z-index: 100;
+  transition: transform 0.4s cubic-bezier(0.34, 1.56, 0.64, 1);
+  pointer-events: none;
+}
+
+.toast.visible {
+  transform: translateX(-50%) translateY(0);
+}
+
+/* ============================================
+   RESPONSIVE
+   ============================================ */
+@media (max-width: 640px) {
+  .storybook-page {
+    padding: 32px 20px 44px;
+    border-radius: 6px 16px 16px 6px;
+  }
+
+  .storybook-page::before {
+    width: 16px;
+  }
+
+  .api-key-input-wrap {
+    flex-direction: column;
+  }
+
+  .btn-convert {
+    padding: 14px 30px;
+    font-size: 1.3rem;
+  }
+
+  .result-actions {
+    flex-direction: column;
+    align-items: center;
+  }
+}
+</style>
+</head>
+<body>
+
+<!-- SVG Filters for sketchy / hand-drawn look -->
+<svg class="svg-filters" aria-hidden="true">
+  <defs>
+    <filter id="sketchy">
+      <feTurbulence type="turbulence" baseFrequency="0.015" numOctaves="3" result="noise" seed="2"/>
+      <feDisplacementMap in="SourceGraphic" in2="noise" scale="2.5" xChannelSelector="R" yChannelSelector="G"/>
+    </filter>
+    <filter id="sketchy-sm">
+      <feTurbulence type="turbulence" baseFrequency="0.03" numOctaves="2" result="noise" seed="5"/>
+      <feDisplacementMap in="SourceGraphic" in2="noise" scale="1.2" xChannelSelector="R" yChannelSelector="G"/>
+    </filter>
+  </defs>
+</svg>
+
+<!-- Margin Doodles -->
+<div class="margin-doodles" aria-hidden="true">
+  <!-- Star top-left -->
+  <svg width="40" height="40" viewBox="0 0 40 40" style="top:8%;left:3%;stroke-width:2;opacity:0.09;animation:twinkle 4s ease-in-out infinite">
+    <path d="M20 4 L23 15 L34 15 L25 22 L28 33 L20 26 L12 33 L15 22 L6 15 L17 15 Z"/>
+  </svg>
+  <!-- Swirl right -->
+  <svg width="50" height="50" viewBox="0 0 50 50" style="top:25%;right:2%;stroke-width:2;opacity:0.07;animation:drift 5s ease-in-out infinite">
+    <path d="M25 10 C35 10 40 20 35 28 C30 36 18 34 16 26 C14 18 22 15 26 20"/>
+  </svg>
+  <!-- Flower bottom-left -->
+  <svg width="44" height="44" viewBox="0 0 44 44" style="bottom:18%;left:2%;stroke-width:2;opacity:0.08;animation:bloom 5s ease-in-out 1s infinite">
+    <circle cx="22" cy="22" r="4"/>
+    <ellipse cx="22" cy="12" rx="5" ry="8" transform="rotate(0 22 22)"/>
+    <ellipse cx="22" cy="12" rx="5" ry="8" transform="rotate(72 22 22)"/>
+    <ellipse cx="22" cy="12" rx="5" ry="8" transform="rotate(144 22 22)"/>
+    <ellipse cx="22" cy="12" rx="5" ry="8" transform="rotate(216 22 22)"/>
+    <ellipse cx="22" cy="12" rx="5" ry="8" transform="rotate(288 22 22)"/>
+  </svg>
+  <!-- Star bottom-right -->
+  <svg width="30" height="30" viewBox="0 0 40 40" style="bottom:10%;right:4%;stroke-width:2;opacity:0.07;animation:twinkle 3.5s ease-in-out 0.5s infinite">
+    <path d="M20 4 L23 15 L34 15 L25 22 L28 33 L20 26 L12 33 L15 22 L6 15 L17 15 Z"/>
+  </svg>
+  <!-- Small swirl top-right -->
+  <svg width="36" height="36" viewBox="0 0 50 50" style="top:60%;left:1.5%;stroke-width:2;opacity:0.06;animation:drift 7s ease-in-out 2s infinite">
+    <path d="M25 10 C35 10 40 20 35 28 C30 36 18 34 16 26 C14 18 22 15 26 20"/>
+  </svg>
+  <!-- Star middle -->
+  <svg width="24" height="24" viewBox="0 0 40 40" style="top:45%;right:1.5%;stroke-width:2.5;opacity:0.06;animation:twinkle 5s ease-in-out 1.5s infinite">
+    <path d="M20 8 L22 17 L31 17 L24 23 L27 32 L20 27 L13 32 L16 23 L9 17 L18 17 Z"/>
+  </svg>
+</div>
+
+<!-- Main App -->
+<div class="storybook-wrapper">
+  <div class="storybook-page">
+    <div class="page-curl-top"></div>
+
+    <!-- Header -->
+    <header class="app-header">
+      <div class="logo-area">
+        <h1 class="app-title">
+          <span class="highlight-red">D</span>oodle<span class="highlight-blue">D</span>rea<span class="highlight-green">m</span>
+          <!-- Star decoration -->
+          <svg class="title-star" viewBox="0 0 40 40" fill="none" stroke="var(--gold)" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round">
+            <path d="M20 4 L23 15 L34 15 L25 22 L28 33 L20 26 L12 33 L15 22 L6 15 L17 15 Z"/>
+          </svg>
+        </h1>
+        <svg class="title-underline" viewBox="0 0 260 12" preserveAspectRatio="none">
+          <path d="M2 8 C30 2, 60 12, 90 6 C120 0, 150 11, 180 5 C210 -1, 240 10, 258 4"/>
+        </svg>
+      </div>
+      <p class="subtitle">Turn your photos into magical coloring pages!</p>
+      <div class="deco-arrow">⌄</div>
+    </header>
+
+    <!-- Settings (API Key) -->
+    <button class="settings-toggle" id="settingsToggle" type="button">
+      <span class="gear-icon">⚙</span>
+      Settings
+      <span class="chevron">▼</span>
+    </button>
+
+    <div class="settings-panel" id="settingsPanel">
+      <div class="settings-inner">
+        <label class="api-key-label">
+          🔑 OpenAI API Key
+        </label>
+        <div class="api-key-input-wrap">
+          <input
+            type="password"
+            class="api-key-input"
+            id="apiKeyInput"
+            placeholder="sk-... (paste your key here)"
+            autocomplete="off"
+            spellcheck="false"
+          >
+          <button class="btn-save-key" id="saveKeyBtn" type="button">Save</button>
+        </div>
+        <div class="key-status" id="keyStatus">
+          <span>✓</span> Key saved!
+        </div>
+      </div>
+    </div>
+
+    <!-- Error Banner -->
+    <div class="error-banner" id="errorBanner">
+      <span class="error-icon">⚠️</span>
+      <span class="error-message" id="errorMessage"></span>
+      <button class="error-close" id="errorClose" type="button">✕</button>
+    </div>
+
+    <!-- Upload Section -->
+    <div class="upload-section">
+      <div class="section-header">
+        <span class="icon">🖼️</span> Upload Your Photo
+      </div>
+      <svg class="wavy-line" viewBox="0 0 400 8" preserveAspectRatio="none">
+        <path d="M0 4 C20 0, 40 8, 60 4 C80 0, 100 8, 120 4 C140 0, 160 8, 180 4 C200 0, 220 8, 240 4 C260 0, 280 8, 300 4 C320 0, 340 8, 360 4 C380 0, 400 8, 400 4"/>
+      </svg>
+
+      <div class="upload-frame">
+        <span class="corner corner-tl"></span>
+        <span class="corner corner-tr"></span>
+        <span class="corner corner-bl"></span>
+        <span class="corner corner-br"></span>
+
+        <div class="upload-zone" id="uploadZone">
+          <input type="file" class="upload-input" id="fileInput" accept="image/*">
+
+          <div class="upload-placeholder" id="uploadPlaceholder">
+            <span class="upload-icon">📸</span>
+            <div class="upload-text">Drop your photo here!</div>
+            <div class="upload-hint">or click to browse — PNG, JPG, WEBP</div>
+          </div>
+
+          <div class="preview-container" id="previewContainer">
+            <img class="preview-image" id="previewImage" alt="Preview of uploaded photo">
+            <button class="btn-change-image" id="changeImageBtn" type="button">✏️ choose a different photo</button>
+          </div>
+        </div>
+      </div>
+    </div>
+
+    <!-- Convert Button -->
+    <div class="convert-section">
+      <button class="btn-convert" id="convertBtn" type="button" disabled>
+        <span class="sparkle">✨</span>
+        Convert to Coloring Page
+        <span class="sparkle">🖍️</span>
+      </button>
+      <div class="convert-hint">
+        ☝️ Upload a photo & add your API key first!
+      </div>
+    </div>
+
+    <!-- Loading State -->
+    <div class="loading-overlay" id="loadingOverlay">
+      <div class="pencil-animation">
+        <div class="pencil">
+          <div class="pencil-tip"></div>
+          <div class="pencil-body"></div>
+          <div class="pencil-eraser"></div>
+        </div>
+        <div class="pencil-line"></div>
+      </div>
+      <div class="loading-text">Creating your coloring page...</div>
+      <div class="loading-sub">This may take a moment — magic takes time! ✨</div>
+    </div>
+
+    <!-- Result Section -->
+    <div class="result-section" id="resultSection">
+      <div class="section-header">
+        <span class="icon">🎨</span> Your Coloring Page is Ready!
+      </div>
+      <svg class="wavy-line" viewBox="0 0 400 8" preserveAspectRatio="none">
+        <path d="M0 4 C20 0, 40 8, 60 4 C80 0, 100 8, 120 4 C140 0, 160 8, 180 4 C200 0, 220 8, 240 4 C260 0, 280 8, 300 4 C320 0, 340 8, 360 4 C380 0, 400 8, 400 4"/>
+      </svg>
+
+      <div class="result-frame">
+        <span class="corner corner-tl"></span>
+        <span class="corner corner-tr"></span>
+        <span class="corner corner-bl"></span>
+        <span class="corner corner-br"></span>
+        <img class="result-image" id="resultImage" alt="Generated coloring page">
+      </div>
+
+      <div class="result-actions">
+        <button class="btn-download" id="downloadBtn" type="button">
+          📥 Download
+        </button>
+        <button class="btn-new" id="newBtn" type="button">
+          🔄 New Coloring Page
+        </button>
+      </div>
+    </div>
+
+    <!-- Footer -->
+    <footer class="app-footer">
+      Made with <span class="heart">♥</span> by DoodleDream
+    </footer>
+  </div>
+</div>
+
+<!-- Toast Notification -->
+<div class="toast" id="toast"></div>
+
+<script>
+(() => {
+  'use strict';
+
+  // ── DOM References ──────────────────────────────────
+  const settingsToggle = document.getElementById('settingsToggle');
+  const settingsPanel = document.getElementById('settingsPanel');
+  const apiKeyInput = document.getElementById('apiKeyInput');
+  const saveKeyBtn = document.getElementById('saveKeyBtn');
+  const keyStatus = document.getElementById('keyStatus');
+  const uploadZone = document.getElementById('uploadZone');
+  const fileInput = document.getElementById('fileInput');
+  const uploadPlaceholder = document.getElementById('uploadPlaceholder');
+  const previewContainer = document.getElementById('previewContainer');
+  const previewImage = document.getElementById('previewImage');
+  const changeImageBtn = document.getElementById('changeImageBtn');
+  const convertBtn = document.getElementById('convertBtn');
+  const convertHint = document.querySelector('.convert-hint');
+  const loadingOverlay = document.getElementById('loadingOverlay');
+  const resultSection = document.getElementById('resultSection');
+  const resultImage = document.getElementById('resultImage');
+  const downloadBtn = document.getElementById('downloadBtn');
+  const newBtn = document.getElementById('newBtn');
+  const errorBanner = document.getElementById('errorBanner');
+  const errorMessage = document.getElementById('errorMessage');
+  const errorClose = document.getElementById('errorClose');
+  const toast = document.getElementById('toast');
+
+  // ── State ───────────────────────────────────────────
+  let uploadedImageBase64 = null;
+  let resultImageUrl = null;
+  let apiKey = '';
+
+  // ── Init ────────────────────────────────────────────
+  function init() {
+    const stored = localStorage.getItem('doodledream_api_key');
+    if (stored) {
+      apiKey = stored;
+      apiKeyInput.value = stored;
+      keyStatus.classList.add('visible');
+    }
+    updateConvertButton();
+    bindEvents();
+  }
+
+  // ── Events ──────────────────────────────────────────
+  function bindEvents() {
+    // Settings toggle
+    settingsToggle.addEventListener('click', () => {
+      const isOpen = settingsPanel.classList.toggle('open');
+      settingsToggle.classList.toggle('open', isOpen);
+    });
+
+    // Save API key
+    saveKeyBtn.addEventListener('click', saveApiKey);
+    apiKeyInput.addEventListener('keydown', (e) => {
+      if (e.key === 'Enter') saveApiKey();
+    });
+
+    // File upload — click
+    uploadZone.addEventListener('click', (e) => {
+      if (e.target === changeImageBtn || e.target.closest('.btn-change-image')) return;
+      fileInput.click();
+    });
+
+    fileInput.addEventListener('change', (e) => {
+      if (e.target.files && e.target.files[0]) handleFile(e.target.files[0]);
+    });
+
+    // Drag & drop
+    uploadZone.addEventListener('dragover', (e) => {
+      e.preventDefault();
+      uploadZone.classList.add('drag-over');
+    });
+
+    uploadZone.addEventListener('dragleave', () => {
+      uploadZone.classList.remove('drag-over');
+    });
+
+    uploadZone.addEventListener('drop', (e) => {
+      e.preventDefault();
+      uploadZone.classList.remove('drag-over');
+      if (e.dataTransfer.files && e.dataTransfer.files[0]) {
+        handleFile(e.dataTransfer.files[0]);
+      }
+    });
+
+    // Change image
+    changeImageBtn.addEventListener('click', (e) => {
+      e.stopPropagation();
+      fileInput.value = '';
+      fileInput.click();
+    });
+
+    // Convert
+    convertBtn.addEventListener('click', convertImage);
+
+    // Download
+    downloadBtn.addEventListener('click', downloadResult);
+
+    // New
+    newBtn.addEventListener('click', resetAll);
+
+    // Error close
+    errorClose.addEventListener('click', hideError);
+  }
+
+  // ── API Key ─────────────────────────────────────────
+  function saveApiKey() {
+    const val = apiKeyInput.value.trim();
+    if (!val) {
+      showToast('Please enter an API key');
+      return;
+    }
+    apiKey = val;
+    localStorage.setItem('doodledream_api_key', val);
+    keyStatus.classList.add('visible');
+    showToast('API key saved! 🔑');
+    updateConvertButton();
+  }
+
+  // ── File Handling ───────────────────────────────────
+  function handleFile(file) {
+    if (!file.type.startsWith('image/')) {
+      showError('Please upload an image file (PNG, JPG, WEBP).');
+      return;
+    }
+
+    if (file.size > 20 * 1024 * 1024) {
+      showError('Image is too large. Please use an image under 20MB.');
+      return;
+    }
+
+    const reader = new FileReader();
+    reader.onload = (e) => {
+      uploadedImageBase64 = e.target.result;
+      previewImage.src = uploadedImageBase64;
+      uploadPlaceholder.classList.add('hidden');
+      previewContainer.classList.add('visible');
+      uploadZone.classList.add('has-image');
+      hideError();
+      updateConvertButton();
+    };
+    reader.onerror = () => {
+      showError('Failed to read the image file. Please try again.');
+    };
+    reader.readAsDataURL(file);
+  }
+
+  // ── Convert ─────────────────────────────────────────
+  async function convertImage() {
+    if (!apiKey) {
+      showError('Please add your OpenAI API key in Settings first.');
+      settingsPanel.classList.add('open');
+      settingsToggle.classList.add('open');
+      return;
+    }
+
+    if (!uploadedImageBase64) {
+      showError('Please upload a photo first.');
+      return;
+    }
+
+    hideError();
+    setLoading(true);
+
+    try {
+      const response = await fetch('https://api.openai.com/v1/images/generations', {
+        method: 'POST',
+        headers: {
+          'Authorization': `Bearer ${apiKey}`,
+          'Content-Type': 'application/json',
+        },
+        body: JSON.stringify({
+          model: 'gpt-image-1',
+          prompt: 'Convert this photo into a black and white coloring book page with clean outlines, no shading, suitable for children to color in',
+          n: 1,
+          image: uploadedImageBase64,
+          size: '1024x1024',
+        }),
+      });
+
+      if (!response.ok) {
+        const errData = await response.json().catch(() => ({}));
+        const errMsg = errData?.error?.message || `API error (${response.status})`;
+        throw new Error(errMsg);
+      }
+
+      const data = await response.json();
+
+      if (data.data && data.data[0]) {
+        const item = data.data[0];
+        if (item.b64_json) {
+          resultImageUrl = 'data:image/png;base64,' + item.b64_json;
+        } else if (item.url) {
+          resultImageUrl = item.url;
+        } else {
+          throw new Error('Unexpected response format from API.');
+        }
+
+        resultImage.src = resultImageUrl;
+        setLoading(false);
+        resultSection.classList.add('visible');
+        resultSection.scrollIntoView({ behavior: 'smooth', block: 'start' });
+        showToast('Coloring page created! 🎨');
+      } else {
+        throw new Error('No image returned from API.');
+      }
+    } catch (err) {
+      setLoading(false);
+      showError(err.message || 'Something went wrong. Please try again.');
+    }
+  }
+
+  // ── Download ────────────────────────────────────────
+  function downloadResult() {
+    if (!resultImageUrl) return;
+
+    // If it's a base64 data URL, download directly
+    if (resultImageUrl.startsWith('data:')) {
+      const link = document.createElement('a');
+      link.href = resultImageUrl;
+      link.download = 'doodledream-coloring-page.png';
+      document.body.appendChild(link);
+      link.click();
+      document.body.removeChild(link);
+      showToast('Downloading... 📥');
+      return;
+    }
+
+    // If it's a URL, fetch and download
+    fetch(resultImageUrl)
+      .then(r => r.blob())
+      .then(blob => {
+        const url = URL.createObjectURL(blob);
+        const link = document.createElement('a');
+        link.href = url;
+        link.download = 'doodledream-coloring-page.png';
+        document.body.appendChild(link);
+        link.click();
+        document.body.removeChild(link);
+        URL.revokeObjectURL(url);
+        showToast('Downloading... 📥');
+      })
+      .catch(() => {
+        // Fallback: open in new tab
+        window.open(resultImageUrl, '_blank');
+      });
+  }
+
+  // ── Reset ───────────────────────────────────────────
+  function resetAll() {
+    uploadedImageBase64 = null;
+    resultImageUrl = null;
+    fileInput.value = '';
+    previewImage.src = '';
+    resultImage.src = '';
+    uploadPlaceholder.classList.remove('hidden');
+    previewContainer.classList.remove('visible');
+    uploadZone.classList.remove('has-image');
+    resultSection.classList.remove('visible');
+    hideError();
+    updateConvertButton();
+    uploadZone.scrollIntoView({ behavior: 'smooth', block: 'center' });
+  }
+
+  // ── UI Helpers ──────────────────────────────────────
+  function updateConvertButton() {
+    const ready = !!uploadedImageBase64 && !!apiKey;
+    convertBtn.disabled = !ready;
+    convertHint.style.display = ready ? 'none' : 'flex';
+  }
+
+  function setLoading(on) {
+    loadingOverlay.classList.toggle('visible', on);
+    convertBtn.disabled = on;
+    if (on) {
+      resultSection.classList.remove('visible');
+    }
+  }
+
+  function showError(msg) {
+    errorMessage.textContent = msg;
+    errorBanner.classList.add('visible');
+  }
+
+  function hideError() {
+    errorBanner.classList.remove('visible');
+  }
+
+  let toastTimer = null;
+  function showToast(msg) {
+    toast.textContent = msg;
+    toast.classList.add('visible');
+    clearTimeout(toastTimer);
+    toastTimer = setTimeout(() => toast.classList.remove('visible'), 2800);
+  }
+
+  // ── Go ──────────────────────────────────────────────
+  init();
+})();
+</script>
+</body>
+</html>

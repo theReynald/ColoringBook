@@ -1,0 +1,1214 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>ColorCraft — Coloring Book Creator</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Fredoka+One&family=Quicksand:wght@400;500;600;700&display=swap" rel="stylesheet">
+<style>
+  *, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
+
+  :root {
+    --blue: #3B82F6;
+    --yellow: #FACC15;
+    --red: #F87171;
+    --green: #4ADE80;
+    --purple: #A78BFA;
+    --orange: #FB923C;
+    --bg: #F9FAFB;
+    --text: #1E293B;
+    --text-light: #64748B;
+    --radius: 12px;
+    --shadow: 0 4px 12px rgba(0,0,0,0.10);
+    --shadow-lg: 0 8px 30px rgba(0,0,0,0.12);
+  }
+
+  body {
+    font-family: 'Quicksand', sans-serif;
+    background: var(--bg);
+    color: var(--text);
+    min-height: 100vh;
+    overflow-x: hidden;
+    position: relative;
+  }
+
+  /* ── Geometric Background Pattern ── */
+  body::before {
+    content: '';
+    position: fixed;
+    inset: 0;
+    z-index: 0;
+    pointer-events: none;
+    background:
+      radial-gradient(circle 2px, rgba(59,130,246,0.10) 1px, transparent 1px),
+      radial-gradient(circle 2px, rgba(168,85,247,0.07) 1px, transparent 1px);
+    background-size: 32px 32px, 48px 48px;
+    background-position: 0 0, 16px 16px;
+  }
+
+  body::after {
+    content: '';
+    position: fixed;
+    inset: 0;
+    z-index: 0;
+    pointer-events: none;
+    opacity: 0.028;
+    background-image:
+      /* triangles */
+      linear-gradient(60deg, var(--yellow) 25%, transparent 25%),
+      linear-gradient(-60deg, var(--red) 25%, transparent 25%),
+      linear-gradient(60deg, transparent 75%, var(--green) 75%),
+      linear-gradient(-60deg, transparent 75%, var(--blue) 75%);
+    background-size: 80px 140px;
+  }
+
+  .page-wrapper { position: relative; z-index: 1; }
+
+  /* ── Header ── */
+  header {
+    background: linear-gradient(135deg, var(--blue) 0%, #2563EB 100%);
+    padding: 0;
+    position: relative;
+    overflow: hidden;
+  }
+
+  header::before {
+    content: '';
+    position: absolute;
+    top: -30px; right: -30px;
+    width: 160px; height: 160px;
+    background: var(--yellow);
+    opacity: 0.15;
+    transform: rotate(45deg);
+    border-radius: 24px;
+  }
+
+  header::after {
+    content: '';
+    position: absolute;
+    bottom: -20px; left: 60px;
+    width: 90px; height: 90px;
+    background: var(--green);
+    opacity: 0.12;
+    clip-path: polygon(50% 0%, 0% 100%, 100% 100%);
+  }
+
+  .header-inner {
+    max-width: 960px;
+    margin: 0 auto;
+    padding: 28px 24px 32px;
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    position: relative;
+    z-index: 2;
+  }
+
+  .logo-group { display: flex; align-items: center; gap: 14px; }
+
+  .logo-icon {
+    width: 52px; height: 52px;
+    background: #fff;
+    border-radius: var(--radius);
+    display: flex; align-items: center; justify-content: center;
+    box-shadow: 0 2px 8px rgba(0,0,0,0.12);
+    position: relative;
+  }
+
+  .logo-icon .hex {
+    width: 28px; height: 28px;
+    background: var(--yellow);
+    clip-path: polygon(50% 0%, 100% 25%, 100% 75%, 50% 100%, 0% 75%, 0% 25%);
+  }
+
+  .logo-icon .tri {
+    position: absolute;
+    width: 14px; height: 14px;
+    background: var(--red);
+    clip-path: polygon(50% 0%, 0% 100%, 100% 100%);
+    top: 6px; right: 4px;
+  }
+
+  .logo-text h1 {
+    font-family: 'Fredoka One', cursive;
+    font-size: 1.95rem;
+    color: #fff;
+    letter-spacing: -0.5px;
+    line-height: 1.1;
+  }
+
+  .logo-text p {
+    font-size: 0.82rem;
+    color: rgba(255,255,255,0.78);
+    font-weight: 600;
+    letter-spacing: 0.5px;
+    margin-top: 2px;
+  }
+
+  .settings-btn {
+    background: rgba(255,255,255,0.18);
+    border: 2px solid rgba(255,255,255,0.3);
+    color: #fff;
+    padding: 10px 18px;
+    border-radius: var(--radius);
+    font-family: 'Quicksand', sans-serif;
+    font-weight: 700;
+    font-size: 0.88rem;
+    cursor: pointer;
+    display: flex; align-items: center; gap: 8px;
+    transition: all 0.2s;
+  }
+
+  .settings-btn:hover { background: rgba(255,255,255,0.28); }
+  .settings-btn:active { transform: scale(0.96); }
+
+  .settings-btn svg { width: 18px; height: 18px; }
+
+  /* ── Color blocks strip under header ── */
+  .color-strip {
+    display: flex; height: 8px;
+  }
+  .color-strip span { flex: 1; }
+  .color-strip span:nth-child(1) { background: var(--yellow); }
+  .color-strip span:nth-child(2) { background: var(--red); }
+  .color-strip span:nth-child(3) { background: var(--green); }
+  .color-strip span:nth-child(4) { background: var(--purple); }
+  .color-strip span:nth-child(5) { background: var(--orange); }
+  .color-strip span:nth-child(6) { background: var(--blue); }
+
+  /* ── Zigzag divider ── */
+  .zigzag {
+    height: 20px;
+    background: linear-gradient(135deg, var(--bg) 33.33%, transparent 33.33%) 0 0,
+                linear-gradient(225deg, var(--bg) 33.33%, transparent 33.33%) 0 0;
+    background-size: 20px 20px;
+    background-color: transparent;
+    margin-top: -20px;
+    position: relative;
+    z-index: 2;
+  }
+
+  /* ── Main Content ── */
+  main {
+    max-width: 960px;
+    margin: 0 auto;
+    padding: 8px 24px 60px;
+  }
+
+  /* ── Settings Panel ── */
+  .settings-panel {
+    background: #fff;
+    border: 2px solid #E2E8F0;
+    border-radius: var(--radius);
+    margin: 20px 0 0;
+    overflow: hidden;
+    box-shadow: var(--shadow);
+    max-height: 0;
+    opacity: 0;
+    transition: max-height 0.4s ease, opacity 0.3s ease, margin 0.3s ease;
+  }
+
+  .settings-panel.open {
+    max-height: 260px;
+    opacity: 1;
+    margin: 20px 0;
+  }
+
+  .settings-panel-inner {
+    padding: 22px 24px;
+  }
+
+  .settings-panel .section-badge {
+    display: inline-flex; align-items: center; gap: 6px;
+    font-family: 'Fredoka One', cursive;
+    font-size: 0.92rem;
+    color: var(--purple);
+    margin-bottom: 12px;
+  }
+
+  .settings-panel .section-badge .dot {
+    width: 10px; height: 10px;
+    background: var(--purple);
+    border-radius: 3px;
+    transform: rotate(45deg);
+  }
+
+  .api-input-group {
+    display: flex; gap: 10px;
+  }
+
+  .api-input-group input {
+    flex: 1;
+    padding: 12px 16px;
+    border: 2px solid #E2E8F0;
+    border-radius: var(--radius);
+    font-family: 'Quicksand', sans-serif;
+    font-size: 0.95rem;
+    font-weight: 600;
+    color: var(--text);
+    outline: none;
+    transition: border-color 0.2s;
+  }
+
+  .api-input-group input:focus { border-color: var(--purple); }
+
+  .api-input-group input::placeholder { color: #94A3B8; font-weight: 500; }
+
+  .save-key-btn {
+    padding: 12px 22px;
+    background: var(--purple);
+    color: #fff;
+    border: none;
+    border-radius: var(--radius);
+    font-family: 'Quicksand', sans-serif;
+    font-weight: 700;
+    font-size: 0.9rem;
+    cursor: pointer;
+    transition: all 0.2s;
+    box-shadow: 0 3px 0 #7C5AC2;
+    white-space: nowrap;
+  }
+
+  .save-key-btn:hover { filter: brightness(1.08); }
+  .save-key-btn:active { transform: translateY(3px); box-shadow: 0 0 0 #7C5AC2; }
+
+  .api-hint {
+    font-size: 0.78rem;
+    color: var(--text-light);
+    margin-top: 10px;
+    line-height: 1.5;
+  }
+
+  .api-status {
+    display: inline-flex; align-items: center; gap: 5px;
+    margin-top: 8px;
+    font-size: 0.8rem;
+    font-weight: 700;
+  }
+
+  .api-status.saved { color: var(--green); }
+  .api-status.unsaved { color: var(--text-light); }
+
+  .api-status .indicator {
+    width: 8px; height: 8px;
+    border-radius: 50%;
+    background: currentColor;
+  }
+
+  /* ── Section Cards ── */
+  .section-card {
+    background: #fff;
+    border-radius: var(--radius);
+    border: 2px solid #E2E8F0;
+    box-shadow: var(--shadow);
+    margin-top: 24px;
+    overflow: hidden;
+    position: relative;
+  }
+
+  .section-card .card-accent {
+    height: 6px;
+  }
+
+  .section-card .card-body {
+    padding: 28px 28px 32px;
+  }
+
+  .section-title {
+    display: flex; align-items: center; gap: 10px;
+    font-family: 'Fredoka One', cursive;
+    font-size: 1.15rem;
+    margin-bottom: 18px;
+  }
+
+  .section-title .shape {
+    width: 22px; height: 22px;
+    flex-shrink: 0;
+  }
+
+  .shape-hex {
+    clip-path: polygon(50% 0%, 100% 25%, 100% 75%, 50% 100%, 0% 75%, 0% 25%);
+  }
+
+  .shape-tri {
+    clip-path: polygon(50% 0%, 0% 100%, 100% 100%);
+  }
+
+  .shape-circle {
+    border-radius: 50%;
+  }
+
+  /* ── Upload Section ── */
+  .upload-section .card-accent { background: linear-gradient(90deg, var(--blue), var(--green)); }
+
+  .upload-zone {
+    border: 3px dashed var(--blue);
+    border-radius: var(--radius);
+    padding: 48px 24px;
+    text-align: center;
+    cursor: pointer;
+    transition: all 0.3s ease;
+    position: relative;
+    overflow: hidden;
+    animation: borderColorCycle 8s linear infinite;
+  }
+
+  @keyframes borderColorCycle {
+    0%   { border-color: var(--blue); }
+    16%  { border-color: var(--green); }
+    33%  { border-color: var(--yellow); }
+    50%  { border-color: var(--orange); }
+    66%  { border-color: var(--red); }
+    83%  { border-color: var(--purple); }
+    100% { border-color: var(--blue); }
+  }
+
+  .upload-zone:hover {
+    background: #F0F7FF;
+    transform: translateY(-2px);
+  }
+
+  .upload-zone.drag-over {
+    background: #DBEAFE;
+    border-style: solid;
+    transform: scale(1.01);
+  }
+
+  .upload-zone .icon-wrap {
+    width: 72px; height: 72px;
+    margin: 0 auto 16px;
+    background: linear-gradient(135deg, #EFF6FF, #DBEAFE);
+    border-radius: var(--radius);
+    display: flex; align-items: center; justify-content: center;
+    position: relative;
+  }
+
+  .upload-zone .icon-wrap::after {
+    content: '';
+    position: absolute;
+    width: 20px; height: 20px;
+    background: var(--green);
+    clip-path: polygon(50% 0%, 0% 100%, 100% 100%);
+    top: -6px; right: -6px;
+    opacity: 0.6;
+  }
+
+  .upload-zone .icon-wrap svg { width: 32px; height: 32px; color: var(--blue); }
+
+  .upload-zone h3 {
+    font-family: 'Fredoka One', cursive;
+    font-size: 1.1rem;
+    color: var(--text);
+    margin-bottom: 6px;
+  }
+
+  .upload-zone p {
+    font-size: 0.88rem;
+    color: var(--text-light);
+    font-weight: 500;
+  }
+
+  .upload-zone p span {
+    color: var(--blue);
+    font-weight: 700;
+    text-decoration: underline;
+    text-underline-offset: 2px;
+  }
+
+  .upload-zone input { display: none; }
+
+  /* ── Preview Section ── */
+  .preview-section { display: none; }
+  .preview-section.visible { display: block; }
+  .preview-section .card-accent { background: linear-gradient(90deg, var(--yellow), var(--orange)); }
+
+  .preview-container {
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    gap: 20px;
+  }
+
+  .preview-image-wrap {
+    max-width: 100%;
+    max-height: 420px;
+    border-radius: var(--radius);
+    overflow: hidden;
+    border: 3px solid #F1F5F9;
+    box-shadow: var(--shadow);
+    position: relative;
+    display: inline-block;
+  }
+
+  .preview-image-wrap img {
+    display: block;
+    max-width: 100%;
+    max-height: 420px;
+    object-fit: contain;
+  }
+
+  .file-info {
+    display: flex; align-items: center; gap: 12px;
+    padding: 10px 16px;
+    background: #FFFBEB;
+    border: 2px solid #FDE68A;
+    border-radius: var(--radius);
+    font-size: 0.84rem;
+    font-weight: 600;
+    color: #92400E;
+    width: 100%;
+  }
+
+  .file-info svg { width: 18px; height: 18px; flex-shrink: 0; }
+
+  .action-buttons {
+    display: flex; gap: 12px; width: 100%;
+    flex-wrap: wrap;
+  }
+
+  .btn {
+    padding: 14px 28px;
+    border: none;
+    border-radius: var(--radius);
+    font-family: 'Quicksand', sans-serif;
+    font-weight: 700;
+    font-size: 0.95rem;
+    cursor: pointer;
+    transition: all 0.15s;
+    display: inline-flex; align-items: center; gap: 8px;
+    position: relative;
+  }
+
+  .btn:active { transform: translateY(3px); }
+
+  .btn-convert {
+    background: var(--blue);
+    color: #fff;
+    box-shadow: 0 4px 0 #2563EB;
+    flex: 1;
+    justify-content: center;
+  }
+
+  .btn-convert:hover { filter: brightness(1.06); }
+  .btn-convert:active { box-shadow: 0 0 0 #2563EB; }
+  .btn-convert:disabled {
+    background: #94A3B8;
+    box-shadow: 0 4px 0 #64748B;
+    cursor: not-allowed;
+  }
+
+  .btn-reset {
+    background: #F1F5F9;
+    color: var(--text);
+    box-shadow: 0 4px 0 #CBD5E1;
+  }
+
+  .btn-reset:hover { background: #E2E8F0; }
+  .btn-reset:active { box-shadow: 0 0 0 #CBD5E1; }
+
+  .btn svg { width: 20px; height: 20px; }
+
+  /* ── Progress Bar ── */
+  .progress-section { display: none; margin-top: 24px; }
+  .progress-section.visible { display: block; }
+
+  .progress-bar-wrapper {
+    background: #E2E8F0;
+    border-radius: 10px;
+    height: 20px;
+    overflow: hidden;
+    position: relative;
+  }
+
+  .progress-bar-fill {
+    height: 100%;
+    border-radius: 10px;
+    background: repeating-linear-gradient(
+      -45deg,
+      var(--blue),
+      var(--blue) 10px,
+      var(--green) 10px,
+      var(--green) 20px,
+      var(--yellow) 20px,
+      var(--yellow) 30px,
+      var(--orange) 30px,
+      var(--orange) 40px,
+      var(--red) 40px,
+      var(--red) 50px,
+      var(--purple) 50px,
+      var(--purple) 60px
+    );
+    background-size: 84.85px 100%;
+    animation: progressStripe 1s linear infinite;
+    width: 0%;
+    transition: width 0.4s ease;
+  }
+
+  @keyframes progressStripe {
+    0% { background-position: 0 0; }
+    100% { background-position: 84.85px 0; }
+  }
+
+  .progress-label {
+    text-align: center;
+    margin-top: 10px;
+    font-weight: 700;
+    font-size: 0.88rem;
+    color: var(--text-light);
+  }
+
+  /* ── Result Section ── */
+  .result-section { display: none; }
+  .result-section.visible { display: block; }
+  .result-section .card-accent { background: linear-gradient(90deg, var(--green), var(--blue)); }
+
+  .result-container {
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    gap: 20px;
+  }
+
+  .result-image-wrap {
+    background: #fff;
+    border-radius: var(--radius);
+    border: 3px solid #E2E8F0;
+    box-shadow: var(--shadow-lg);
+    overflow: hidden;
+    max-width: 100%;
+    display: inline-block;
+  }
+
+  .result-image-wrap img {
+    display: block;
+    max-width: 100%;
+    max-height: 520px;
+    object-fit: contain;
+  }
+
+  .btn-download {
+    background: var(--green);
+    color: #fff;
+    box-shadow: 0 4px 0 #22C55E;
+    flex: 1;
+    justify-content: center;
+  }
+
+  .btn-download:hover { filter: brightness(1.06); }
+  .btn-download:active { box-shadow: 0 0 0 #22C55E; }
+
+  .btn-new {
+    background: var(--orange);
+    color: #fff;
+    box-shadow: 0 4px 0 #EA8B1E;
+  }
+
+  .btn-new:hover { filter: brightness(1.06); }
+  .btn-new:active { box-shadow: 0 0 0 #EA8B1E; }
+
+  /* ── Error Toast ── */
+  .error-toast {
+    position: fixed;
+    bottom: 30px; left: 50%;
+    transform: translateX(-50%) translateY(120px);
+    background: var(--red);
+    color: #fff;
+    padding: 14px 24px;
+    border-radius: var(--radius);
+    font-weight: 700;
+    font-size: 0.9rem;
+    box-shadow: var(--shadow-lg);
+    z-index: 100;
+    transition: transform 0.4s ease;
+    max-width: 90%;
+    text-align: center;
+    display: flex; align-items: center; gap: 10px;
+  }
+
+  .error-toast.show { transform: translateX(-50%) translateY(0); }
+  .error-toast svg { width: 20px; height: 20px; flex-shrink: 0; }
+
+  /* ── Footer ── */
+  footer {
+    text-align: center;
+    padding: 28px 24px 36px;
+    color: var(--text-light);
+    font-size: 0.82rem;
+    font-weight: 600;
+    position: relative;
+    z-index: 1;
+  }
+
+  footer .geo-shapes {
+    display: flex; justify-content: center; gap: 8px;
+    margin-bottom: 10px;
+    opacity: 0.4;
+  }
+
+  footer .geo-shapes span {
+    width: 10px; height: 10px;
+  }
+
+  /* ── Decorative Floating Shapes ── */
+  .floating-shapes {
+    position: fixed;
+    inset: 0;
+    z-index: 0;
+    pointer-events: none;
+    overflow: hidden;
+  }
+
+  .floating-shapes .shape-float {
+    position: absolute;
+    opacity: 0.04;
+    animation: floatShape 20s ease-in-out infinite;
+  }
+
+  @keyframes floatShape {
+    0%, 100% { transform: translateY(0) rotate(0deg); }
+    50% { transform: translateY(-30px) rotate(180deg); }
+  }
+
+  .floating-shapes .s1 {
+    width: 120px; height: 120px; background: var(--blue);
+    clip-path: polygon(50% 0%, 100% 25%, 100% 75%, 50% 100%, 0% 75%, 0% 25%);
+    top: 15%; left: 5%;
+    animation-delay: 0s;
+  }
+
+  .floating-shapes .s2 {
+    width: 80px; height: 80px; background: var(--yellow);
+    clip-path: polygon(50% 0%, 0% 100%, 100% 100%);
+    top: 40%; right: 8%;
+    animation-delay: -5s;
+  }
+
+  .floating-shapes .s3 {
+    width: 100px; height: 100px; background: var(--red);
+    border-radius: 50%;
+    bottom: 20%; left: 8%;
+    animation-delay: -10s;
+  }
+
+  .floating-shapes .s4 {
+    width: 60px; height: 60px; background: var(--green);
+    border-radius: 8px;
+    transform: rotate(45deg);
+    top: 65%; right: 4%;
+    animation-delay: -15s;
+  }
+
+  .floating-shapes .s5 {
+    width: 90px; height: 90px; background: var(--purple);
+    clip-path: polygon(50% 0%, 100% 25%, 100% 75%, 50% 100%, 0% 75%, 0% 25%);
+    top: 80%; left: 50%;
+    animation-delay: -7s;
+  }
+
+  /* ── Wave Divider ── */
+  .wave-divider {
+    height: 24px;
+    background: transparent;
+    position: relative;
+    margin: 0;
+  }
+
+  .wave-divider::before {
+    content: '';
+    position: absolute;
+    left: 0; right: 0; top: 0;
+    height: 24px;
+    background: 
+      url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 120 24'%3E%3Cpath d='M0 24 L15 0 L30 24 L45 0 L60 24 L75 0 L90 24 L105 0 L120 24' fill='none' stroke='%23E2E8F0' stroke-width='2'/%3E%3C/svg%3E") repeat-x;
+    background-size: 120px 24px;
+    opacity: 0.7;
+  }
+
+  /* ── Responsive ── */
+  @media (max-width: 640px) {
+    .header-inner { flex-direction: column; gap: 14px; text-align: center; }
+    .logo-group { justify-content: center; }
+    .section-card .card-body { padding: 20px 18px 24px; }
+    .api-input-group { flex-direction: column; }
+    .action-buttons { flex-direction: column; }
+    .btn { justify-content: center; }
+    .upload-zone { padding: 36px 18px; }
+    main { padding: 8px 14px 40px; }
+  }
+
+  /* ── Success flash ── */
+  @keyframes successPop {
+    0% { transform: scale(0.9); opacity: 0; }
+    50% { transform: scale(1.02); }
+    100% { transform: scale(1); opacity: 1; }
+  }
+
+  .result-section.visible { animation: successPop 0.4s ease; }
+</style>
+</head>
+<body>
+
+<!-- Floating decorative shapes -->
+<div class="floating-shapes">
+  <div class="shape-float s1"></div>
+  <div class="shape-float s2"></div>
+  <div class="shape-float s3"></div>
+  <div class="shape-float s4"></div>
+  <div class="shape-float s5"></div>
+</div>
+
+<div class="page-wrapper">
+
+  <!-- Header -->
+  <header>
+    <div class="header-inner">
+      <div class="logo-group">
+        <div class="logo-icon">
+          <div class="hex"></div>
+          <div class="tri"></div>
+        </div>
+        <div class="logo-text">
+          <h1>ColorCraft</h1>
+          <p>COLORING BOOK CREATOR</p>
+        </div>
+      </div>
+      <button class="settings-btn" id="settingsToggle" aria-label="Toggle API settings">
+        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="3"/><path d="M19.4 15a1.65 1.65 0 0 0 .33 1.82l.06.06a2 2 0 1 1-2.83 2.83l-.06-.06a1.65 1.65 0 0 0-1.82-.33 1.65 1.65 0 0 0-1 1.51V21a2 2 0 0 1-4 0v-.09A1.65 1.65 0 0 0 9 19.4a1.65 1.65 0 0 0-1.82.33l-.06.06a2 2 0 1 1-2.83-2.83l.06-.06A1.65 1.65 0 0 0 4.68 15a1.65 1.65 0 0 0-1.51-1H3a2 2 0 0 1 0-4h.09A1.65 1.65 0 0 0 4.6 9a1.65 1.65 0 0 0-.33-1.82l-.06-.06a2 2 0 1 1 2.83-2.83l.06.06A1.65 1.65 0 0 0 9 4.68a1.65 1.65 0 0 0 1-1.51V3a2 2 0 0 1 4 0v.09a1.65 1.65 0 0 0 1 1.51 1.65 1.65 0 0 0 1.82-.33l.06-.06a2 2 0 1 1 2.83 2.83l-.06.06A1.65 1.65 0 0 0 19.4 9a1.65 1.65 0 0 0 1.51 1H21a2 2 0 0 1 0 4h-.09a1.65 1.65 0 0 0-1.51 1z"/></svg>
+        API Settings
+      </button>
+    </div>
+  </header>
+
+  <!-- Color strip -->
+  <div class="color-strip">
+    <span></span><span></span><span></span><span></span><span></span><span></span>
+  </div>
+
+  <div class="zigzag"></div>
+
+  <main>
+    <!-- Settings Panel -->
+    <div class="settings-panel" id="settingsPanel">
+      <div class="settings-panel-inner">
+        <div class="section-badge"><span class="dot"></span> API Configuration</div>
+        <div class="api-input-group">
+          <input type="password" id="apiKeyInput" placeholder="sk-... paste your OpenAI API key" autocomplete="off">
+          <button class="save-key-btn" id="saveKeyBtn">Save Key</button>
+        </div>
+        <p class="api-hint">Your key is stored locally in your browser and never sent anywhere except OpenAI.</p>
+        <div class="api-status" id="apiStatus">
+          <span class="indicator"></span>
+          <span class="status-text"></span>
+        </div>
+      </div>
+    </div>
+
+    <!-- Upload Section -->
+    <div class="section-card upload-section">
+      <div class="card-accent"></div>
+      <div class="card-body">
+        <div class="section-title">
+          <div class="shape shape-hex" style="background: var(--blue);"></div>
+          Upload Your Photo
+        </div>
+        <div class="upload-zone" id="uploadZone">
+          <div class="icon-wrap">
+            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4"/><polyline points="17 8 12 3 7 8"/><line x1="12" y1="3" x2="12" y2="15"/></svg>
+          </div>
+          <h3>Drag &amp; drop your image here</h3>
+          <p>or <span>browse files</span> to upload</p>
+          <p style="margin-top:8px; font-size:0.78rem; color:#94A3B8;">PNG, JPG, WEBP up to 20MB</p>
+          <input type="file" id="fileInput" accept="image/png,image/jpeg,image/webp">
+        </div>
+      </div>
+    </div>
+
+    <!-- Preview Section -->
+    <div class="section-card preview-section" id="previewSection">
+      <div class="card-accent"></div>
+      <div class="card-body">
+        <div class="section-title">
+          <div class="shape shape-tri" style="background: var(--yellow);"></div>
+          Preview
+        </div>
+        <div class="preview-container">
+          <div class="preview-image-wrap">
+            <img id="previewImage" alt="Uploaded image preview">
+          </div>
+          <div class="file-info" id="fileInfo">
+            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z"/><polyline points="14 2 14 8 20 8"/></svg>
+            <span id="fileName">image.png</span>
+          </div>
+          <div class="action-buttons">
+            <button class="btn btn-convert" id="convertBtn">
+              <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M12 2L2 7l10 5 10-5-10-5z"/><path d="M2 17l10 5 10-5"/><path d="M2 12l10 5 10-5"/></svg>
+              Convert to Coloring Page
+            </button>
+            <button class="btn btn-reset" id="resetBtn">
+              <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><polyline points="1 4 1 10 7 10"/><path d="M3.51 15a9 9 0 1 0 2.13-9.36L1 10"/></svg>
+              Reset
+            </button>
+          </div>
+        </div>
+
+        <!-- Progress Bar -->
+        <div class="progress-section" id="progressSection">
+          <div class="wave-divider"></div>
+          <div style="padding-top: 16px;">
+            <div class="progress-bar-wrapper">
+              <div class="progress-bar-fill" id="progressFill"></div>
+            </div>
+            <p class="progress-label" id="progressLabel">Preparing your image...</p>
+          </div>
+        </div>
+      </div>
+    </div>
+
+    <!-- Result Section -->
+    <div class="section-card result-section" id="resultSection">
+      <div class="card-accent"></div>
+      <div class="card-body">
+        <div class="section-title">
+          <div class="shape shape-circle" style="background: var(--green);"></div>
+          Your Coloring Page
+        </div>
+        <div class="result-container">
+          <div class="result-image-wrap">
+            <img id="resultImage" alt="Generated coloring page">
+          </div>
+          <div class="action-buttons">
+            <button class="btn btn-download" id="downloadBtn">
+              <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4"/><polyline points="7 10 12 15 17 10"/><line x1="12" y1="15" x2="12" y2="3"/></svg>
+              Download Coloring Page
+            </button>
+            <button class="btn btn-new" id="newBtn">
+              <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><line x1="12" y1="5" x2="12" y2="19"/><line x1="5" y1="12" x2="19" y2="12"/></svg>
+              New
+            </button>
+          </div>
+        </div>
+      </div>
+    </div>
+  </main>
+
+  <!-- Footer -->
+  <footer>
+    <div class="geo-shapes">
+      <span class="shape shape-hex" style="background: var(--blue);"></span>
+      <span class="shape shape-tri" style="background: var(--yellow);"></span>
+      <span class="shape shape-circle" style="background: var(--red);"></span>
+      <span class="shape shape-hex" style="background: var(--green);"></span>
+      <span class="shape shape-tri" style="background: var(--purple);"></span>
+    </div>
+    ColorCraft &copy; 2026 &mdash; Turn any photo into coloring magic
+  </footer>
+</div>
+
+<!-- Error Toast -->
+<div class="error-toast" id="errorToast">
+  <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="12" cy="12" r="10"/><line x1="15" y1="9" x2="9" y2="15"/><line x1="9" y1="9" x2="15" y2="15"/></svg>
+  <span id="errorMessage">Something went wrong</span>
+</div>
+
+<script>
+(function() {
+  'use strict';
+
+  // ── DOM ──
+  const settingsToggle = document.getElementById('settingsToggle');
+  const settingsPanel = document.getElementById('settingsPanel');
+  const apiKeyInput = document.getElementById('apiKeyInput');
+  const saveKeyBtn = document.getElementById('saveKeyBtn');
+  const apiStatus = document.getElementById('apiStatus');
+  const uploadZone = document.getElementById('uploadZone');
+  const fileInput = document.getElementById('fileInput');
+  const previewSection = document.getElementById('previewSection');
+  const previewImage = document.getElementById('previewImage');
+  const fileInfo = document.getElementById('fileInfo');
+  const fileName = document.getElementById('fileName');
+  const convertBtn = document.getElementById('convertBtn');
+  const resetBtn = document.getElementById('resetBtn');
+  const progressSection = document.getElementById('progressSection');
+  const progressFill = document.getElementById('progressFill');
+  const progressLabel = document.getElementById('progressLabel');
+  const resultSection = document.getElementById('resultSection');
+  const resultImage = document.getElementById('resultImage');
+  const downloadBtn = document.getElementById('downloadBtn');
+  const newBtn = document.getElementById('newBtn');
+  const errorToast = document.getElementById('errorToast');
+  const errorMessage = document.getElementById('errorMessage');
+
+  let uploadedFile = null;
+  let uploadedBase64 = null;
+  let resultDataUrl = null;
+
+  // ── Settings Toggle ──
+  settingsToggle.addEventListener('click', () => {
+    settingsPanel.classList.toggle('open');
+  });
+
+  // ── API Key Management ──
+  function loadApiKey() {
+    const key = localStorage.getItem('colorcraft_api_key');
+    if (key) {
+      apiKeyInput.value = key;
+      updateApiStatus(true);
+    } else {
+      updateApiStatus(false);
+    }
+  }
+
+  function updateApiStatus(saved) {
+    if (saved) {
+      apiStatus.className = 'api-status saved';
+      apiStatus.innerHTML = '<span class="indicator"></span><span class="status-text">Key saved securely in browser</span>';
+    } else {
+      apiStatus.className = 'api-status unsaved';
+      apiStatus.innerHTML = '<span class="indicator"></span><span class="status-text">No API key set</span>';
+    }
+  }
+
+  saveKeyBtn.addEventListener('click', () => {
+    const key = apiKeyInput.value.trim();
+    if (!key) {
+      showError('Please enter a valid API key.');
+      return;
+    }
+    localStorage.setItem('colorcraft_api_key', key);
+    updateApiStatus(true);
+  });
+
+  loadApiKey();
+
+  // ── File Upload ──
+  uploadZone.addEventListener('click', () => fileInput.click());
+
+  uploadZone.addEventListener('dragover', (e) => {
+    e.preventDefault();
+    uploadZone.classList.add('drag-over');
+  });
+
+  uploadZone.addEventListener('dragleave', () => {
+    uploadZone.classList.remove('drag-over');
+  });
+
+  uploadZone.addEventListener('drop', (e) => {
+    e.preventDefault();
+    uploadZone.classList.remove('drag-over');
+    const files = e.dataTransfer.files;
+    if (files.length > 0) handleFile(files[0]);
+  });
+
+  fileInput.addEventListener('change', () => {
+    if (fileInput.files.length > 0) handleFile(fileInput.files[0]);
+  });
+
+  function handleFile(file) {
+    const validTypes = ['image/png', 'image/jpeg', 'image/webp'];
+    if (!validTypes.includes(file.type)) {
+      showError('Please upload a PNG, JPG, or WEBP image.');
+      return;
+    }
+    if (file.size > 20 * 1024 * 1024) {
+      showError('File is too large. Maximum size is 20MB.');
+      return;
+    }
+
+    uploadedFile = file;
+    const reader = new FileReader();
+    reader.onload = (e) => {
+      uploadedBase64 = e.target.result;
+      previewImage.src = uploadedBase64;
+      fileName.textContent = `${file.name} (${formatSize(file.size)})`;
+      previewSection.classList.add('visible');
+      resultSection.classList.remove('visible');
+      progressSection.classList.remove('visible');
+      previewSection.scrollIntoView({ behavior: 'smooth', block: 'center' });
+    };
+    reader.readAsDataURL(file);
+  }
+
+  function formatSize(bytes) {
+    if (bytes < 1024) return bytes + ' B';
+    if (bytes < 1024 * 1024) return (bytes / 1024).toFixed(1) + ' KB';
+    return (bytes / (1024 * 1024)).toFixed(1) + ' MB';
+  }
+
+  // ── Convert ──
+  convertBtn.addEventListener('click', convert);
+
+  async function convert() {
+    const apiKey = localStorage.getItem('colorcraft_api_key');
+    if (!apiKey) {
+      settingsPanel.classList.add('open');
+      showError('Please add your OpenAI API key in settings first.');
+      return;
+    }
+    if (!uploadedBase64) {
+      showError('Please upload an image first.');
+      return;
+    }
+
+    convertBtn.disabled = true;
+    progressSection.classList.add('visible');
+    resultSection.classList.remove('visible');
+
+    // Simulate progress
+    let progress = 0;
+    progressFill.style.width = '0%';
+    progressLabel.textContent = 'Preparing your image...';
+
+    const progressSteps = [
+      { pct: 15, text: 'Encoding image data...' },
+      { pct: 30, text: 'Connecting to OpenAI...' },
+      { pct: 50, text: 'Sending to AI artist...' },
+      { pct: 70, text: 'AI is drawing your coloring page...' },
+      { pct: 85, text: 'Almost there, adding final lines...' },
+    ];
+
+    let stepIdx = 0;
+    const progressInterval = setInterval(() => {
+      if (stepIdx < progressSteps.length) {
+        const step = progressSteps[stepIdx];
+        progressFill.style.width = step.pct + '%';
+        progressLabel.textContent = step.text;
+        stepIdx++;
+      }
+    }, 1800);
+
+    try {
+      // Extract the base64 data (strip the data URL prefix)
+      const base64Data = uploadedBase64.split(',')[1];
+
+      // Determine MIME type
+      const mimeMatch = uploadedBase64.match(/^data:(image\/\w+);/);
+      const mimeType = mimeMatch ? mimeMatch[1] : 'image/png';
+
+      const response = await fetch('https://api.openai.com/v1/images/generations', {
+        method: 'POST',
+        headers: {
+          'Authorization': `Bearer ${apiKey}`,
+          'Content-Type': 'application/json',
+        },
+        body: JSON.stringify({
+          model: 'gpt-image-1',
+          prompt: 'Convert this photo into a black and white coloring book page with clean outlines, no shading, suitable for children to color in',
+          n: 1,
+          size: '1024x1024',
+          image: {
+            type: mimeType,
+            data: base64Data,
+          },
+        }),
+      });
+
+      clearInterval(progressInterval);
+
+      if (!response.ok) {
+        const errData = await response.json().catch(() => ({}));
+        const errMsg = errData?.error?.message || `API error: ${response.status}`;
+        throw new Error(errMsg);
+      }
+
+      const data = await response.json();
+
+      progressFill.style.width = '100%';
+      progressLabel.textContent = 'Done! Here is your coloring page.';
+
+      // Handle response — check for b64_json or url
+      let imgSrc;
+      if (data.data && data.data[0]) {
+        if (data.data[0].b64_json) {
+          imgSrc = 'data:image/png;base64,' + data.data[0].b64_json;
+        } else if (data.data[0].url) {
+          imgSrc = data.data[0].url;
+        }
+      }
+
+      if (!imgSrc) {
+        throw new Error('No image returned from OpenAI.');
+      }
+
+      resultDataUrl = imgSrc;
+      resultImage.src = imgSrc;
+
+      setTimeout(() => {
+        progressSection.classList.remove('visible');
+        resultSection.classList.add('visible');
+        resultSection.scrollIntoView({ behavior: 'smooth', block: 'center' });
+      }, 600);
+
+    } catch (err) {
+      clearInterval(progressInterval);
+      progressSection.classList.remove('visible');
+      showError(err.message || 'Something went wrong. Please try again.');
+    } finally {
+      convertBtn.disabled = false;
+    }
+  }
+
+  // ── Download ──
+  downloadBtn.addEventListener('click', async () => {
+    if (!resultDataUrl) return;
+    try {
+      let downloadUrl = resultDataUrl;
+
+      // If it's a remote URL, fetch it and convert to blob
+      if (resultDataUrl.startsWith('http')) {
+        const resp = await fetch(resultDataUrl);
+        const blob = await resp.blob();
+        downloadUrl = URL.createObjectURL(blob);
+      }
+
+      const a = document.createElement('a');
+      a.href = downloadUrl;
+      a.download = 'colorcraft-coloring-page.png';
+      document.body.appendChild(a);
+      a.click();
+      document.body.removeChild(a);
+
+      if (downloadUrl !== resultDataUrl) {
+        URL.revokeObjectURL(downloadUrl);
+      }
+    } catch {
+      showError('Failed to download. Try right-clicking the image to save it.');
+    }
+  });
+
+  // ── Reset / New ──
+  resetBtn.addEventListener('click', resetAll);
+  newBtn.addEventListener('click', resetAll);
+
+  function resetAll() {
+    uploadedFile = null;
+    uploadedBase64 = null;
+    resultDataUrl = null;
+    fileInput.value = '';
+    previewSection.classList.remove('visible');
+    resultSection.classList.remove('visible');
+    progressSection.classList.remove('visible');
+    window.scrollTo({ top: 0, behavior: 'smooth' });
+  }
+
+  // ── Error Toast ──
+  let errorTimeout;
+  function showError(msg) {
+    errorMessage.textContent = msg;
+    errorToast.classList.add('show');
+    clearTimeout(errorTimeout);
+    errorTimeout = setTimeout(() => {
+      errorToast.classList.remove('show');
+    }, 5000);
+  }
+
+  errorToast.addEventListener('click', () => {
+    errorToast.classList.remove('show');
+    clearTimeout(errorTimeout);
+  });
+
+})();
+</script>
+</body>
+</html>
