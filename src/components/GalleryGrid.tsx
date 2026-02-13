@@ -154,6 +154,27 @@ export default function GalleryGrid() {
               >
                 💾 Save
               </button>
+              <button
+                onClick={async () => {
+                  if (!confirm("Delete this coloring page?")) return;
+                  const res = await fetch("/api/gallery", {
+                    method: "DELETE",
+                    headers: { "Content-Type": "application/json" },
+                    body: JSON.stringify({ id: page.id }),
+                  });
+                  if (res.ok) {
+                    setPages((prev) => prev.filter((p) => p.id !== page.id));
+                  }
+                }}
+                className="px-4 py-2 rounded-full font-bold text-xs transition-all hover:scale-105"
+                style={{
+                  background: "linear-gradient(135deg, #FF6B6B, #EE5A5A)",
+                  color: "#fff",
+                  boxShadow: "0 4px 12px rgba(255,107,107,0.2)",
+                }}
+              >
+                🗑️ Delete
+              </button>
             </div>
           </div>
         </Card>
