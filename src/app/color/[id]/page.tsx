@@ -69,7 +69,7 @@ export default async function ColorPage({ params }: PageProps) {
           </h2>
           <RainbowDivider />
           <ColoringCanvas
-            imageUrl={data.coloring_page_url}
+            imageUrl={data.colored_url || data.coloring_page_url}
             pageId={id}
           />
         </Card>

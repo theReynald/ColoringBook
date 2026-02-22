@@ -35,6 +35,7 @@ export default function ColoringCanvas({ imageUrl, pageId }: ColoringCanvasProps
   const [isDrawing, setIsDrawing] = useState(false);
   const [history, setHistory] = useState<ImageData[]>([]);
   const [imageLoaded, setImageLoaded] = useState(false);
+  const [isSaving, setIsSaving] = useState(false);
 
   const lastPosRef = useRef<{ x: number; y: number } | null>(null);
 
@@ -180,6 +181,44 @@ export default function ColoringCanvas({ imageUrl, pageId }: ColoringCanvasProps
     link.download = `colorsplash-colored-${pageId}.png`;
     link.href = exportCanvas.toDataURL("image/png");
     link.click();
+  }, [pageId]);
+
+  const handleSave = useCallback(async () => {
+    const bgCanvas = bgCanvasRef.current;
+    const drawCanvas = canvasRef.current;
+    if (!bgCanvas || !drawCanvas) return;
+
+    setIsSaving(true);
+
+    try {
+      // Composite: bg + strokes
+      const exportCanvas = document.createElement("canvas");
+      exportCanvas.width = bgCanvas.width;
+      exportCanvas.height = bgCanvas.height;
+      const ctx = exportCanvas.getContext("2d")!;
+      ctx.drawImage(bgCanvas, 0, 0);
+      ctx.drawImage(drawCanvas, 0, 0);
+
+      const imageData = exportCanvas.toDataURL("image/png");
+
+      const res = await fetch("/api/save-colored", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ pageId, imageData }),
+      });
+
+      if (!res.ok) {
+        const data = await res.json();
+        throw new Error(data.error || "Failed to save");
+      }
+
+      showToast("Coloring saved successfully! ✨");
+    } catch (err) {
+      console.error("Save error:", err);
+      showToast("Failed to save coloring. Please try again.");
+    } finally {
+      setIsSaving(false);
+    }
   }, [pageId]);
 
   return (
@@ -330,6 +369,18 @@ export default function ColoringCanvas({ imageUrl, pageId }: ColoringCanvasProps
       {/* Bottom actions */}
       <div className="flex flex-wrap justify-center gap-3">
         <button
+          onClick={handleSave}
+          disabled={isSaving}
+          className="px-6 py-3 rounded-full font-extrabold text-sm transition-all duration-200 hover:scale-105 active:scale-95 disabled:opacity-50 disabled:hover:scale-100"
+          style={{
+            background: "linear-gradient(135deg, #C084FC, #A78BFA)",
+            color: "#fff",
+            boxShadow: "0 6px 20px rgba(192,132,252,0.25)",
+          }}
+        >
+          {isSaving ? "💫 Saving..." : "💾 Save Progress"}
+        </button>
+        <button
           onClick={handleDownload}
           className="px-6 py-3 rounded-full font-extrabold text-sm transition-all duration-200 hover:scale-105 active:scale-95"
           style={{
@@ -338,7 +389,7 @@ export default function ColoringCanvas({ imageUrl, pageId }: ColoringCanvasProps
             boxShadow: "0 6px 20px rgba(110,231,183,0.25)",
           }}
         >
-          💾 Download Colored Page
+          ⬇️ Download
         </button>
         <button
           onClick={() => router.push("/")}
