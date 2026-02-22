@@ -1,0 +1,1980 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>ColorSplash Tutorial — Build a Photo-to-Coloring-Page App</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Fredoka+One&family=Quicksand:wght@400;500;600;700&family=Fira+Code:wght@400;500&display=swap" rel="stylesheet">
+<style>
+  *, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
+
+  :root {
+    --blue: #3B82F6;
+    --yellow: #FACC15;
+    --red: #F87171;
+    --green: #4ADE80;
+    --purple: #A78BFA;
+    --orange: #FB923C;
+    --bg: #F9FAFB;
+    --text: #1E293B;
+    --text-light: #64748B;
+    --radius: 12px;
+    --shadow: 0 4px 12px rgba(0,0,0,0.10);
+    --shadow-lg: 0 8px 30px rgba(0,0,0,0.12);
+    --code-bg: #1e1e2e;
+    --code-fg: #cdd6f4;
+    --inline-code-bg: #EEF2FF;
+    --inline-code-fg: #4338CA;
+    --sidebar-width: 280px;
+  }
+
+  html { scroll-behavior: smooth; }
+
+  body {
+    font-family: 'Quicksand', sans-serif;
+    background: var(--bg);
+    color: var(--text);
+    min-height: 100vh;
+    overflow-x: hidden;
+    position: relative;
+    line-height: 1.7;
+    font-size: 16px;
+  }
+
+  /* ── Geometric Background Pattern ── */
+  body::before {
+    content: '';
+    position: fixed;
+    inset: 0;
+    z-index: 0;
+    pointer-events: none;
+    background:
+      radial-gradient(circle 2px, rgba(59,130,246,0.10) 1px, transparent 1px),
+      radial-gradient(circle 2px, rgba(168,85,247,0.07) 1px, transparent 1px);
+    background-size: 32px 32px, 48px 48px;
+    background-position: 0 0, 16px 16px;
+  }
+
+  body::after {
+    content: '';
+    position: fixed;
+    inset: 0;
+    z-index: 0;
+    pointer-events: none;
+    opacity: 0.028;
+    background-image:
+      linear-gradient(60deg, var(--yellow) 25%, transparent 25%),
+      linear-gradient(-60deg, var(--red) 25%, transparent 25%),
+      linear-gradient(60deg, transparent 75%, var(--green) 75%),
+      linear-gradient(-60deg, transparent 75%, var(--blue) 75%);
+    background-size: 80px 140px;
+  }
+
+  .page-wrapper { position: relative; z-index: 1; }
+
+  /* ── Floating Decorative Shapes ── */
+  .floating-shapes {
+    position: fixed;
+    inset: 0;
+    z-index: 0;
+    pointer-events: none;
+    overflow: hidden;
+  }
+
+  .floating-shapes .shape-float {
+    position: absolute;
+    opacity: 0.04;
+    animation: floatShape 20s ease-in-out infinite;
+  }
+
+  @keyframes floatShape {
+    0%, 100% { transform: translateY(0) rotate(0deg); }
+    50% { transform: translateY(-30px) rotate(180deg); }
+  }
+
+  .floating-shapes .s1 {
+    width: 120px; height: 120px; background: var(--blue);
+    clip-path: polygon(50% 0%, 100% 25%, 100% 75%, 50% 100%, 0% 75%, 0% 25%);
+    top: 15%; left: 5%;
+    animation-delay: 0s;
+  }
+
+  .floating-shapes .s2 {
+    width: 80px; height: 80px; background: var(--yellow);
+    clip-path: polygon(50% 0%, 0% 100%, 100% 100%);
+    top: 40%; right: 8%;
+    animation-delay: -5s;
+  }
+
+  .floating-shapes .s3 {
+    width: 100px; height: 100px; background: var(--red);
+    border-radius: 50%;
+    bottom: 20%; left: 8%;
+    animation-delay: -10s;
+  }
+
+  .floating-shapes .s4 {
+    width: 60px; height: 60px; background: var(--green);
+    border-radius: 8px;
+    transform: rotate(45deg);
+    top: 65%; right: 4%;
+    animation-delay: -15s;
+  }
+
+  .floating-shapes .s5 {
+    width: 90px; height: 90px; background: var(--purple);
+    clip-path: polygon(50% 0%, 100% 25%, 100% 75%, 50% 100%, 0% 75%, 0% 25%);
+    top: 80%; left: 50%;
+    animation-delay: -7s;
+  }
+
+  /* ── Header ── */
+  header {
+    background: linear-gradient(135deg, var(--blue) 0%, #2563EB 100%);
+    padding: 0;
+    position: relative;
+    overflow: hidden;
+  }
+
+  header::before {
+    content: '';
+    position: absolute;
+    top: -30px; right: -30px;
+    width: 160px; height: 160px;
+    background: var(--yellow);
+    opacity: 0.15;
+    transform: rotate(45deg);
+    border-radius: 24px;
+  }
+
+  header::after {
+    content: '';
+    position: absolute;
+    bottom: -20px; left: 60px;
+    width: 90px; height: 90px;
+    background: var(--green);
+    opacity: 0.12;
+    clip-path: polygon(50% 0%, 0% 100%, 100% 100%);
+  }
+
+  .header-inner {
+    max-width: 960px;
+    margin: 0 auto;
+    padding: 28px 24px 32px;
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    position: relative;
+    z-index: 2;
+  }
+
+  .logo-group { display: flex; align-items: center; gap: 14px; }
+
+  .logo-icon {
+    width: 52px; height: 52px;
+    background: #fff;
+    border-radius: var(--radius);
+    display: flex; align-items: center; justify-content: center;
+    box-shadow: 0 2px 8px rgba(0,0,0,0.12);
+    position: relative;
+  }
+
+  .logo-icon .hex {
+    width: 28px; height: 28px;
+    background: var(--yellow);
+    clip-path: polygon(50% 0%, 100% 25%, 100% 75%, 50% 100%, 0% 75%, 0% 25%);
+  }
+
+  .logo-icon .tri {
+    position: absolute;
+    width: 14px; height: 14px;
+    background: var(--red);
+    clip-path: polygon(50% 0%, 0% 100%, 100% 100%);
+    top: 6px; right: 4px;
+  }
+
+  .logo-text h1 {
+    font-family: 'Fredoka One', cursive;
+    font-size: 1.95rem;
+    color: #fff;
+    letter-spacing: -0.5px;
+    line-height: 1.1;
+    background: none;
+    -webkit-text-fill-color: #fff;
+    -webkit-background-clip: unset;
+  }
+
+  .logo-text p {
+    font-size: 0.82rem;
+    color: rgba(255,255,255,0.78);
+    font-weight: 600;
+    letter-spacing: 0.5px;
+    margin-top: 2px;
+    margin-bottom: 0;
+  }
+
+  /* ── Color strip under header ── */
+  .color-strip {
+    display: flex; height: 8px;
+  }
+  .color-strip span { flex: 1; }
+  .color-strip span:nth-child(1) { background: var(--yellow); }
+  .color-strip span:nth-child(2) { background: var(--red); }
+  .color-strip span:nth-child(3) { background: var(--green); }
+  .color-strip span:nth-child(4) { background: var(--purple); }
+  .color-strip span:nth-child(5) { background: var(--orange); }
+  .color-strip span:nth-child(6) { background: var(--blue); }
+
+  /* ── Zigzag divider ── */
+  .zigzag {
+    height: 20px;
+    background: linear-gradient(135deg, var(--bg) 33.33%, transparent 33.33%) 0 0,
+                linear-gradient(225deg, var(--bg) 33.33%, transparent 33.33%) 0 0;
+    background-size: 20px 20px;
+    background-color: transparent;
+    margin-top: -20px;
+    position: relative;
+    z-index: 2;
+  }
+
+  /* ── Sidebar / Table of Contents ── */
+  .sidebar {
+    position: fixed;
+    top: 0;
+    left: 0;
+    width: var(--sidebar-width);
+    height: 100vh;
+    overflow-y: auto;
+    background: #fff;
+    border-right: 2px solid #E2E8F0;
+    padding: 24px 16px;
+    z-index: 100;
+    transition: transform 0.3s ease;
+    box-shadow: 2px 0 12px rgba(0,0,0,0.04);
+  }
+
+  .sidebar-brand {
+    font-family: 'Fredoka One', cursive;
+    font-size: 1.2rem;
+    color: var(--blue);
+    margin-bottom: 4px;
+  }
+
+  .sidebar-subtitle {
+    font-size: 0.75rem;
+    color: var(--text-light);
+    font-weight: 700;
+    letter-spacing: 1px;
+    text-transform: uppercase;
+    margin-bottom: 18px;
+    padding-bottom: 14px;
+    border-bottom: 4px solid transparent;
+    border-image: linear-gradient(90deg, var(--blue), var(--green), var(--yellow), var(--red), var(--purple), var(--orange)) 1;
+  }
+
+  .sidebar nav ol {
+    list-style: none;
+    padding: 0;
+  }
+
+  .sidebar nav > ol > li {
+    margin-bottom: 6px;
+  }
+
+  .sidebar nav a {
+    display: block;
+    padding: 6px 10px;
+    border-radius: 8px;
+    text-decoration: none;
+    color: var(--text-light);
+    font-size: 0.82rem;
+    font-weight: 600;
+    transition: all 0.2s;
+    line-height: 1.4;
+  }
+
+  .sidebar nav a:hover {
+    background: rgba(59,130,246,0.08);
+    color: var(--blue);
+  }
+
+  .sidebar nav a.chapter-link {
+    font-weight: 700;
+    color: var(--text);
+  }
+
+  .sidebar nav .sub-items {
+    padding-left: 12px;
+  }
+
+  .sidebar nav .sub-items a {
+    font-size: 0.78rem;
+    font-weight: 500;
+    padding: 3px 10px;
+    color: var(--text-light);
+  }
+
+  .sidebar-toggle {
+    display: none;
+    position: fixed;
+    top: 12px;
+    left: 12px;
+    z-index: 200;
+    background: linear-gradient(135deg, var(--blue), #2563EB);
+    color: #fff;
+    border: none;
+    border-radius: var(--radius);
+    width: 44px;
+    height: 44px;
+    font-size: 1.3rem;
+    cursor: pointer;
+    box-shadow: 0 4px 16px rgba(59,130,246,0.3);
+  }
+
+  /* ── Geometric shapes ── */
+  .shape-hex { clip-path: polygon(50% 0%, 100% 25%, 100% 75%, 50% 100%, 0% 75%, 0% 25%); }
+  .shape-tri { clip-path: polygon(50% 0%, 0% 100%, 100% 100%); }
+  .shape-circle { border-radius: 50%; }
+
+  /* ── Main Content ── */
+  .content {
+    margin-left: var(--sidebar-width);
+    max-width: 820px;
+    padding: 40px 48px 80px;
+    position: relative;
+    z-index: 1;
+  }
+
+  /* ── Typography ── */
+  .content > h1:first-child {
+    font-family: 'Fredoka One', cursive;
+    font-size: 2.4rem;
+    color: var(--blue);
+    margin-bottom: 12px;
+    line-height: 1.2;
+    letter-spacing: -0.5px;
+    background: none;
+    -webkit-text-fill-color: var(--blue);
+    -webkit-background-clip: unset;
+  }
+
+  .content > h1:first-child + p {
+    font-size: 1.08rem;
+    color: var(--text-light);
+    font-weight: 600;
+    margin-bottom: 32px;
+  }
+
+  h2 {
+    font-family: 'Fredoka One', cursive;
+    font-size: 1.65rem;
+    margin-top: 56px;
+    margin-bottom: 24px;
+    color: var(--text);
+    padding-bottom: 12px;
+    border-bottom: 4px solid transparent;
+    border-image: linear-gradient(90deg, var(--blue), var(--green), var(--yellow), var(--red), var(--purple), var(--orange)) 1;
+    letter-spacing: -0.3px;
+  }
+
+  h3 {
+    font-family: 'Fredoka One', cursive;
+    font-size: 1.25rem;
+    font-weight: 400;
+    margin-top: 36px;
+    margin-bottom: 16px;
+    color: var(--text);
+    letter-spacing: -0.2px;
+  }
+
+  h4 {
+    font-size: 1.05rem;
+    font-weight: 700;
+    margin-top: 28px;
+    margin-bottom: 12px;
+    color: var(--text-light);
+  }
+
+  p {
+    margin-bottom: 16px;
+  }
+
+  a {
+    color: var(--blue);
+    text-decoration: none;
+    font-weight: 700;
+  }
+
+  a:hover {
+    text-decoration: underline;
+  }
+
+  strong {
+    font-weight: 700;
+  }
+
+  hr {
+    border: none;
+    height: 4px;
+    background: linear-gradient(90deg, var(--blue), var(--green), var(--yellow), var(--red), var(--purple), var(--orange));
+    border-radius: 4px;
+    margin: 48px 0;
+  }
+
+  /* ── Lists ── */
+  ul, ol {
+    margin-bottom: 16px;
+    padding-left: 24px;
+  }
+
+  li {
+    margin-bottom: 6px;
+  }
+
+  li > ul, li > ol {
+    margin-top: 6px;
+    margin-bottom: 6px;
+  }
+
+  /* ── Code ── */
+  code {
+    font-family: 'Fira Code', monospace;
+    font-size: 0.88em;
+    background: var(--inline-code-bg);
+    color: var(--inline-code-fg);
+    padding: 2px 7px;
+    border-radius: 6px;
+    font-weight: 500;
+  }
+
+  pre {
+    margin-bottom: 20px;
+    border-radius: var(--radius);
+    overflow-x: auto;
+    background: var(--code-bg);
+    border: 2px solid #334155;
+    box-shadow: var(--shadow);
+  }
+
+  pre code {
+    display: block;
+    padding: 20px 24px;
+    background: none;
+    color: var(--code-fg);
+    font-size: 0.85rem;
+    line-height: 1.6;
+    border-radius: 0;
+  }
+
+  /* ── Tables ── */
+  table {
+    width: 100%;
+    border-collapse: collapse;
+    margin-bottom: 20px;
+    background: #fff;
+    border-radius: var(--radius);
+    overflow: hidden;
+    border: 2px solid #E2E8F0;
+    box-shadow: var(--shadow);
+  }
+
+  thead {
+    background: linear-gradient(135deg, rgba(59,130,246,0.08), rgba(167,139,250,0.08));
+  }
+
+  th {
+    padding: 12px 16px;
+    text-align: left;
+    font-weight: 700;
+    font-size: 0.88rem;
+    color: var(--text);
+    border-bottom: 2px solid #E2E8F0;
+  }
+
+  td {
+    padding: 10px 16px;
+    font-size: 0.88rem;
+    border-bottom: 1px solid #F1F5F9;
+    color: var(--text-light);
+  }
+
+  tbody tr:last-child td {
+    border-bottom: none;
+  }
+
+  tbody tr:hover {
+    background: rgba(59,130,246,0.03);
+  }
+
+  /* ── Blockquotes (Callouts) ── */
+  blockquote {
+    margin: 20px 0;
+    padding: 16px 20px;
+    border-radius: var(--radius);
+    border-left: 4px solid var(--blue);
+    background: #fff;
+    border: 2px solid #E2E8F0;
+    border-left: 4px solid var(--blue);
+    box-shadow: var(--shadow);
+  }
+
+  blockquote p {
+    margin-bottom: 0;
+    font-size: 0.92rem;
+  }
+
+  blockquote p:first-child {
+    margin-bottom: 0;
+  }
+
+  /* ── Back to top button ── */
+  .back-to-top {
+    position: fixed;
+    bottom: 28px;
+    right: 28px;
+    width: 44px;
+    height: 44px;
+    border-radius: var(--radius);
+    background: linear-gradient(135deg, var(--blue), #2563EB);
+    color: #fff;
+    border: none;
+    font-size: 1.2rem;
+    cursor: pointer;
+    box-shadow: 0 4px 16px rgba(59,130,246,0.35);
+    opacity: 0;
+    transform: translateY(16px);
+    transition: all 0.3s;
+    z-index: 100;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+  }
+
+  .back-to-top.visible {
+    opacity: 1;
+    transform: translateY(0);
+  }
+
+  .back-to-top:hover {
+    transform: translateY(-2px);
+    box-shadow: 0 6px 24px rgba(59,130,246,0.5);
+  }
+
+  /* ── Footer ── */
+  footer {
+    margin-left: var(--sidebar-width);
+    text-align: center;
+    padding: 28px 24px 36px;
+    color: var(--text-light);
+    font-size: 0.82rem;
+    font-weight: 600;
+    position: relative;
+    z-index: 1;
+  }
+
+  footer .geo-shapes {
+    display: flex; justify-content: center; gap: 8px;
+    margin-bottom: 10px;
+    opacity: 0.4;
+  }
+
+  footer .geo-shapes span {
+    width: 10px; height: 10px;
+  }
+
+  /* ── Responsive ── */
+  @media (max-width: 900px) {
+    .sidebar {
+      transform: translateX(-100%);
+    }
+
+    .sidebar.open {
+      transform: translateX(0);
+    }
+
+    .sidebar-toggle {
+      display: flex;
+      align-items: center;
+      justify-content: center;
+    }
+
+    .content {
+      margin-left: 0;
+      padding: 60px 24px 80px;
+    }
+
+    footer {
+      margin-left: 0;
+    }
+  }
+
+  @media (max-width: 600px) {
+    .content > h1:first-child { font-size: 1.7rem; }
+    h2 { font-size: 1.35rem; }
+    h3 { font-size: 1.1rem; }
+    .content { padding: 60px 16px 80px; }
+    pre code { font-size: 0.8rem; padding: 16px; }
+    table { font-size: 0.82rem; }
+    th, td { padding: 8px 12px; }
+  }
+</style>
+</head>
+<body>
+
+<!-- Floating decorative shapes -->
+<div class="floating-shapes">
+  <div class="shape-float s1"></div>
+  <div class="shape-float s2"></div>
+  <div class="shape-float s3"></div>
+  <div class="shape-float s4"></div>
+  <div class="shape-float s5"></div>
+</div>
+
+<div class="page-wrapper">
+
+<!-- Mobile sidebar toggle -->
+<button class="sidebar-toggle" onclick="document.querySelector('.sidebar').classList.toggle('open')" aria-label="Toggle navigation">☰</button>
+
+<!-- Sidebar -->
+<aside class="sidebar">
+  <div class="sidebar-brand">ColorSplash 🎨</div>
+  <div class="sidebar-subtitle">Tutorial</div>
+  <nav>
+    <ol>
+      <li>
+        <a href="#chapter-1-project-overview" class="chapter-link">
+          <span class="shape shape-hex" style="background: var(--blue); width: 14px; height: 14px; display: inline-block; vertical-align: middle; margin-right: 6px;"></span>
+          1. Project Overview
+        </a>
+        <div class="sub-items">
+          <a href="#11-what-the-app-does">1.1 What the App Does</a>
+          <a href="#12-high-level-architecture">1.2 High-Level Architecture</a>
+          <a href="#13-tech-stack">1.3 Tech Stack</a>
+          <a href="#14-data-flow">1.4 Data Flow</a>
+        </div>
+      </li>
+      <li>
+        <a href="#chapter-2-prerequisites" class="chapter-link">
+          <span class="shape shape-tri" style="background: var(--yellow); width: 14px; height: 14px; display: inline-block; vertical-align: middle; margin-right: 6px;"></span>
+          2. Prerequisites
+        </a>
+        <div class="sub-items">
+          <a href="#21-required-tools">2.1 Required Tools</a>
+          <a href="#22-accounts-needed">2.2 Accounts Needed</a>
+          <a href="#23-environment-variables">2.3 Environment Variables</a>
+        </div>
+      </li>
+      <li>
+        <a href="#chapter-3-project-initialization" class="chapter-link">
+          <span class="shape shape-circle" style="background: var(--red); width: 14px; height: 14px; display: inline-block; vertical-align: middle; margin-right: 6px;"></span>
+          3. Project Initialization
+        </a>
+        <div class="sub-items">
+          <a href="#31-create-the-nextjs-project">3.1 Create the Next.js Project</a>
+          <a href="#32-install-additional-dependencies">3.2 Install Additional Dependencies</a>
+          <a href="#33-configure-nextjs-for-remote-images">3.3 Configure Next.js for Remote Images</a>
+          <a href="#34-create-the-environment-file">3.4 Create the Environment File</a>
+        </div>
+      </li>
+      <li>
+        <a href="#chapter-4-core-architecture" class="chapter-link">
+          <span class="shape shape-hex" style="background: var(--green); width: 14px; height: 14px; display: inline-block; vertical-align: middle; margin-right: 6px;"></span>
+          4. Core Architecture
+        </a>
+        <div class="sub-items">
+          <a href="#41-folder-structure">4.1 Folder Structure</a>
+          <a href="#42-why-each-directory-exists">4.2 Why Each Directory Exists</a>
+          <a href="#43-server-vs-client-boundaries">4.3 Server vs Client Boundaries</a>
+        </div>
+      </li>
+      <li>
+        <a href="#chapter-5-feature-implementation" class="chapter-link">
+          <span class="shape shape-tri" style="background: var(--purple); width: 14px; height: 14px; display: inline-block; vertical-align: middle; margin-right: 6px;"></span>
+          5. Feature Implementation
+        </a>
+        <div class="sub-items">
+          <a href="#51-supabase-setup-database-storage">5.1 Supabase Setup (Database + Storage)</a>
+          <a href="#52-supabase-client-libraries">5.2 Supabase Client Libraries</a>
+          <a href="#53-global-layout-and-styling">5.3 Global Layout and Styling</a>
+          <a href="#54-ui-components">5.4 UI Components</a>
+          <a href="#55-create-page-upload-convert-flow">5.5 Create Page (Upload + Convert Flow)</a>
+          <a href="#56-convert-api-route">5.6 Convert API Route</a>
+          <a href="#57-gallery-api-route">5.7 Gallery API Route</a>
+          <a href="#58-gallery-page">5.8 Gallery Page</a>
+          <a href="#59-coloring-canvas-page">5.9 Coloring Canvas Page</a>
+          <a href="#510-interactive-coloring-canvas">5.10 Interactive Coloring Canvas</a>
+          <a href="#511-toast-notification-system">5.11 Toast Notification System</a>
+        </div>
+      </li>
+      <li>
+        <a href="#chapter-6-external-integrations" class="chapter-link">
+          <span class="shape shape-circle" style="background: var(--orange); width: 14px; height: 14px; display: inline-block; vertical-align: middle; margin-right: 6px;"></span>
+          6. External Integrations
+        </a>
+        <div class="sub-items">
+          <a href="#61-supabase">6.1 Supabase</a>
+          <a href="#62-openai-gpt-image-1">6.2 OpenAI (gpt-image-1)</a>
+        </div>
+      </li>
+      <li>
+        <a href="#chapter-7-running-the-app" class="chapter-link">
+          <span class="shape shape-hex" style="background: var(--blue); width: 14px; height: 14px; display: inline-block; vertical-align: middle; margin-right: 6px;"></span>
+          7. Running the App
+        </a>
+        <div class="sub-items">
+          <a href="#71-development-mode">7.1 Development Mode</a>
+          <a href="#72-production-build">7.2 Production Build</a>
+          <a href="#73-environment-setup-checklist">7.3 Environment Setup Checklist</a>
+          <a href="#74-verifying-everything-works">7.4 Verifying Everything Works</a>
+        </div>
+      </li>
+      <li>
+        <a href="#chapter-8-troubleshooting" class="chapter-link">
+          <span class="shape shape-tri" style="background: var(--yellow); width: 14px; height: 14px; display: inline-block; vertical-align: middle; margin-right: 6px;"></span>
+          8. Troubleshooting
+        </a>
+        <div class="sub-items">
+          <a href="#81-missing-environment-variables">8.1 Missing Environment Variables</a>
+          <a href="#82-openai-api-errors">8.2 OpenAI API Errors</a>
+          <a href="#83-function-timeout">8.3 Function Timeout</a>
+          <a href="#84-supabase-storage-403-errors">8.4 Supabase Storage 403 Errors</a>
+          <a href="#85-cors-issues">8.5 CORS Issues</a>
+          <a href="#86-file-too-large">8.6 File Too Large</a>
+          <a href="#87-database-table-missing">8.7 Database Table Missing</a>
+        </div>
+      </li>
+      <li>
+        <a href="#chapter-9-architecture-deep-dive" class="chapter-link">
+          <span class="shape shape-circle" style="background: var(--red); width: 14px; height: 14px; display: inline-block; vertical-align: middle; margin-right: 6px;"></span>
+          9. Architecture Deep Dive
+        </a>
+        <div class="sub-items">
+          <a href="#91-why-this-design-works">9.1 Why This Design Works</a>
+          <a href="#92-where-scalability-bottlenecks-could-appear">9.2 Where Scalability Bottlenecks Could Appear</a>
+          <a href="#93-what-could-be-refactored">9.3 What Could Be Refactored</a>
+          <a href="#94-how-to-productionize-it">9.4 How to Productionize It</a>
+        </div>
+      </li>
+      <li>
+        <a href="#chapter-10-lightweight-version-guidance" class="chapter-link">
+          <span class="shape shape-hex" style="background: var(--green); width: 14px; height: 14px; display: inline-block; vertical-align: middle; margin-right: 6px;"></span>
+          10. Lightweight Version Guidance
+        </a>
+        <div class="sub-items">
+          <a href="#101-remove-supabase-local-only-version">10.1 Remove Supabase (Local-Only Version)</a>
+          <a href="#102-remove-the-gallery">10.2 Remove the Gallery</a>
+          <a href="#103-single-page-version">10.3 Single-Page Version</a>
+          <a href="#104-replace-openai-with-a-free-alternative">10.4 Replace OpenAI with a Free Alternative</a>
+        </div>
+      </li>
+
+    </ol>
+  </nav>
+</aside>
+
+<!-- Header -->
+<header>
+  <div class="header-inner">
+    <div class="logo-group">
+      <div class="logo-icon">
+        <div class="hex"></div>
+        <div class="tri"></div>
+      </div>
+      <div class="logo-text">
+        <h1>ColorSplash</h1>
+        <p>BUILD A PHOTO-TO-COLORING-PAGE APP</p>
+      </div>
+    </div>
+  </div>
+</header>
+
+<!-- Color strip -->
+<div class="color-strip">
+  <span></span><span></span><span></span><span></span><span></span><span></span>
+</div>
+
+<div class="zigzag"></div>
+
+<!-- Main content -->
+<div class="content">
+<h1 id="colorsplash-build-a-photo-to-coloring-page-app-from-scratch">ColorSplash: Build a Photo-to-Coloring-Page App from Scratch</h1>
+<p>A step-by-step tutorial for recreating this project from zero. By the end, you will have a fully working app that converts photos into coloring book pages, lets you color them in the browser, and stores everything in the cloud.</p>
+<hr>
+<h2 id="table-of-contents">Table of Contents</h2>
+<ol>
+<li><a href="#chapter-1-project-overview">Chapter 1: Project Overview</a>
+1.1 <a href="#11-what-the-app-does">What the App Does</a>
+1.2 <a href="#12-high-level-architecture">High-Level Architecture</a>
+1.3 <a href="#13-tech-stack">Tech Stack</a>
+1.4 <a href="#14-data-flow">Data Flow</a></li>
+<li><a href="#chapter-2-prerequisites">Chapter 2: Prerequisites</a>
+2.1 <a href="#21-required-tools">Required Tools</a>
+2.2 <a href="#22-accounts-needed">Accounts Needed</a>
+2.3 <a href="#23-environment-variables">Environment Variables</a></li>
+<li><a href="#chapter-3-project-initialization">Chapter 3: Project Initialization</a>
+3.1 <a href="#31-create-the-nextjs-project">Create the Next.js Project</a>
+3.2 <a href="#32-install-additional-dependencies">Install Additional Dependencies</a>
+3.3 <a href="#33-configure-nextjs-for-remote-images">Configure Next.js for Remote Images</a>
+3.4 <a href="#34-create-the-environment-file">Create the Environment File</a></li>
+<li><a href="#chapter-4-core-architecture">Chapter 4: Core Architecture</a>
+4.1 <a href="#41-folder-structure">Folder Structure</a>
+4.2 <a href="#42-why-each-directory-exists">Why Each Directory Exists</a>
+4.3 <a href="#43-server-vs-client-boundaries">Server vs Client Boundaries</a></li>
+<li><a href="#chapter-5-feature-implementation">Chapter 5: Feature Implementation</a>
+5.1 <a href="#51-supabase-setup-database--storage">Supabase Setup (Database + Storage)</a>
+5.2 <a href="#52-supabase-client-libraries">Supabase Client Libraries</a>
+5.3 <a href="#53-global-layout-and-styling">Global Layout and Styling</a>
+5.4 <a href="#54-ui-components">UI Components</a>
+5.5 <a href="#55-create-page-upload--convert-flow">Create Page (Upload + Convert Flow)</a>
+5.6 <a href="#56-convert-api-route">Convert API Route</a>
+5.7 <a href="#57-gallery-api-route">Gallery API Route</a>
+5.8 <a href="#58-gallery-page">Gallery Page</a>
+5.9 <a href="#59-coloring-canvas-page">Coloring Canvas Page</a>
+5.10 <a href="#510-interactive-coloring-canvas">Interactive Coloring Canvas</a>
+5.11 <a href="#511-toast-notification-system">Toast Notification System</a></li>
+<li><a href="#chapter-6-external-integrations">Chapter 6: External Integrations</a>
+6.1 <a href="#61-supabase">Supabase</a>
+6.2 <a href="#62-openai-gpt-image-1">OpenAI (gpt-image-1)</a></li>
+<li><a href="#chapter-7-running-the-app">Chapter 7: Running the App</a>
+7.1 <a href="#71-development-mode">Development Mode</a>
+7.2 <a href="#72-production-build">Production Build</a>
+7.3 <a href="#73-environment-setup-checklist">Environment Setup Checklist</a>
+7.4 <a href="#74-verifying-everything-works">Verifying Everything Works</a></li>
+<li><a href="#chapter-8-troubleshooting">Chapter 8: Troubleshooting</a>
+8.1 <a href="#81-missing-environment-variables">Missing Environment Variables</a>
+8.2 <a href="#82-openai-api-errors">OpenAI API Errors</a>
+8.3 <a href="#83-function-timeout">Function Timeout</a>
+8.4 <a href="#84-supabase-storage-403-errors">Supabase Storage 403 Errors</a>
+8.5 <a href="#85-cors-issues">CORS Issues</a>
+8.6 <a href="#86-file-too-large">File Too Large</a>
+8.7 <a href="#87-database-table-missing">Database Table Missing</a></li>
+<li><a href="#chapter-9-architecture-deep-dive">Chapter 9: Architecture Deep Dive</a>
+9.1 <a href="#91-why-this-design-works">Why This Design Works</a>
+9.2 <a href="#92-where-scalability-bottlenecks-could-appear">Where Scalability Bottlenecks Could Appear</a>
+9.3 <a href="#93-what-could-be-refactored">What Could Be Refactored</a>
+9.4 <a href="#94-how-to-productionize-it">How to Productionize It</a></li>
+<li><a href="#chapter-10-lightweight-version-guidance">Chapter 10: Lightweight Version Guidance</a>
+10.1 <a href="#101-remove-supabase-local-only-version">Remove Supabase (Local-Only Version)</a>
+10.2 <a href="#102-remove-the-gallery">Remove the Gallery</a>
+10.3 <a href="#103-single-page-version">Single-Page Version</a>
+10.4 <a href="#104-replace-openai-with-a-free-alternative">Replace OpenAI with a Free Alternative</a></li>
+</ol>
+<hr>
+<h2 id="chapter-1-project-overview">Chapter 1: Project Overview</h2>
+<h3 id="11-what-the-app-does">1.1 What the App Does</h3>
+<p>ColorSplash lets you upload a photo and converts it into a black-and-white coloring book page using the OpenAI image editing API (<code>gpt-image-1</code>). You can then color the generated page directly in the browser using an interactive canvas, download the results, and browse a gallery of all your previous creations.</p>
+<h3 id="12-high-level-architecture">1.2 High-Level Architecture</h3>
+<pre><code class="language-text">[ Browser (React/Next.js) ]
+        |
+        | Upload FormData
+        v
+[ Next.js API Route: /api/convert ]
+        |
+        |--- Upload original to Supabase Storage
+        |--- Send image to OpenAI gpt-image-1 API
+        |--- Upload coloring page result to Supabase Storage
+        |--- Insert metadata into Supabase Postgres (images table)
+        |
+        v
+[ Browser receives: image ID + URLs ]
+        |
+        |--- Display result
+        |--- Navigate to /color/[id] for canvas coloring
+        |--- Navigate to /gallery for browsing all pages
+</code></pre>
+<h3 id="13-tech-stack">1.3 Tech Stack</h3>
+<table>
+<thead>
+<tr>
+<th>Layer</th>
+<th>Technology</th>
+</tr>
+</thead>
+<tbody><tr>
+<td>Framework</td>
+<td>Next.js 16 (App Router)</td>
+</tr>
+<tr>
+<td>Language</td>
+<td>TypeScript</td>
+</tr>
+<tr>
+<td>UI</td>
+<td>React 19, Tailwind CSS 4</td>
+</tr>
+<tr>
+<td>Database</td>
+<td>Supabase (PostgreSQL)</td>
+</tr>
+<tr>
+<td>File Storage</td>
+<td>Supabase Storage</td>
+</tr>
+<tr>
+<td>AI/ML</td>
+<td>OpenAI Images Edit API (<code>gpt-image-1</code>)</td>
+</tr>
+<tr>
+<td>Font</td>
+<td>Google Fonts (Nunito)</td>
+</tr>
+<tr>
+<td>UUID</td>
+<td><code>uuid</code> package (v4)</td>
+</tr>
+</tbody></table>
+<h3 id="14-data-flow">1.4 Data Flow</h3>
+<pre><code class="language-text">1. You upload a photo (JPG/PNG/WEBP, max 20MB)
+2. POST /api/convert receives the FormData
+3. Original image is stored in Supabase Storage bucket &quot;images&quot; under originals/
+4. Image is sent to OpenAI gpt-image-1 with a coloring-book prompt
+5. OpenAI returns a b64_json or URL of the generated coloring page
+6. Coloring page PNG is stored in Supabase Storage under coloring-pages/
+7. A database row is created in the &quot;images&quot; table with both URLs + metadata
+8. Browser receives the record ID and coloring page URL
+9. You can color on an HTML5 Canvas overlay, download the result, or browse the gallery
+</code></pre>
+<h3 id="chapter-1-recap">Chapter 1 Recap</h3>
+<p>In this chapter, you learned:</p>
+<ol>
+<li>What ColorSplash does at a high level</li>
+<li>How the browser, API routes, Supabase, and OpenAI interact</li>
+<li>The full tech stack powering the app</li>
+<li>The end-to-end data flow from upload to coloring</li>
+</ol>
+<p>You now have the big picture. Next, you will make sure you have everything you need before writing code.</p>
+<hr>
+<h2 id="chapter-2-prerequisites">Chapter 2: Prerequisites</h2>
+<h3 id="21-required-tools">2.1 Required Tools</h3>
+<ul>
+<li><strong>Node.js</strong> v18.17 or later (v20+ recommended)</li>
+<li><strong>npm</strong> (comes with Node.js) or <strong>pnpm</strong> / <strong>yarn</strong></li>
+<li>A code editor (VS Code recommended)</li>
+<li>A web browser</li>
+</ul>
+<h3 id="22-accounts-needed">2.2 Accounts Needed</h3>
+<ol>
+<li><p><strong>OpenAI account</strong> with API access and billing enabled</p>
+<ul>
+<li>You need an API key with access to the <code>gpt-image-1</code> model</li>
+<li>Sign up at <a href="https://platform.openai.com">https://platform.openai.com</a></li>
+</ul>
+</li>
+<li><p><strong>Supabase account</strong> (free tier works)</p>
+<ul>
+<li>Sign up at <a href="https://supabase.com">https://supabase.com</a></li>
+<li>You will create a project with a database and a storage bucket</li>
+</ul>
+</li>
+</ol>
+<h3 id="23-environment-variables">2.3 Environment Variables</h3>
+<p>You will create a <code>.env.local</code> file in the project root with these four values:</p>
+<pre><code class="language-env">NEXT_PUBLIC_SUPABASE_URL=https://your-project-id.supabase.co
+NEXT_PUBLIC_SUPABASE_ANON_KEY=your-supabase-anon-key
+SUPABASE_SERVICE_ROLE_KEY=your-supabase-service-role-key
+OPENAI_API_KEY=sk-your-openai-api-key
+</code></pre>
+<table>
+<thead>
+<tr>
+<th>Variable</th>
+<th>Where to Find It</th>
+<th>Purpose</th>
+</tr>
+</thead>
+<tbody><tr>
+<td><code>NEXT_PUBLIC_SUPABASE_URL</code></td>
+<td>Supabase Dashboard &gt; Settings &gt; API</td>
+<td>Public Supabase project URL</td>
+</tr>
+<tr>
+<td><code>NEXT_PUBLIC_SUPABASE_ANON_KEY</code></td>
+<td>Supabase Dashboard &gt; Settings &gt; API</td>
+<td>Public anonymous key (safe for client-side)</td>
+</tr>
+<tr>
+<td><code>SUPABASE_SERVICE_ROLE_KEY</code></td>
+<td>Supabase Dashboard &gt; Settings &gt; API</td>
+<td>Server-only admin key (never expose to client)</td>
+</tr>
+<tr>
+<td><code>OPENAI_API_KEY</code></td>
+<td>OpenAI Dashboard &gt; API Keys</td>
+<td>Used server-side to call the image edit API</td>
+</tr>
+</tbody></table>
+<blockquote>
+<p>⚠️ <strong>Warning:</strong> Never commit <code>.env.local</code> to version control. It contains secret keys that could compromise your project and your OpenAI billing account.</p>
+</blockquote>
+<h3 id="chapter-2-recap">Chapter 2 Recap</h3>
+<p>In this chapter, you confirmed:</p>
+<ol>
+<li>The required tools and runtime versions</li>
+<li>Which third-party accounts you need</li>
+<li>The four environment variables and where to find each one</li>
+</ol>
+<p>You are now ready to scaffold the project. Next, you will initialize the codebase from scratch.</p>
+<hr>
+<h2 id="chapter-3-project-initialization">Chapter 3: Project Initialization</h2>
+<h3 id="31-create-the-nextjs-project">3.1 Create the Next.js Project</h3>
+<p>Run this command to scaffold a new Next.js app:</p>
+<pre><code class="language-bash">npx create-next-app@latest coloring-book --typescript --tailwind --eslint --app --src-dir
+</code></pre>
+<p>When prompted, choose these options:</p>
+<ol>
+<li>TypeScript: <strong>Yes</strong></li>
+<li>ESLint: <strong>Yes</strong></li>
+<li>Tailwind CSS: <strong>Yes</strong></li>
+<li><code>src/</code> directory: <strong>Yes</strong></li>
+<li>App Router: <strong>Yes</strong></li>
+<li>Turbopack: <strong>Yes</strong> (default)</li>
+<li>Customize import alias: <strong>Yes</strong>, use <code>@/*</code></li>
+</ol>
+<h3 id="32-install-additional-dependencies">3.2 Install Additional Dependencies</h3>
+<pre><code class="language-bash">cd coloring-book
+npm install @supabase/supabase-js uuid
+npm install -D @types/uuid
+</code></pre>
+<table>
+<thead>
+<tr>
+<th>Package</th>
+<th>Purpose</th>
+</tr>
+</thead>
+<tbody><tr>
+<td><code>@supabase/supabase-js</code></td>
+<td>Client library for Supabase (DB + Storage)</td>
+</tr>
+<tr>
+<td><code>uuid</code></td>
+<td>Generate unique file IDs for storage paths</td>
+</tr>
+<tr>
+<td><code>@types/uuid</code></td>
+<td>TypeScript types for uuid</td>
+</tr>
+</tbody></table>
+<h3 id="33-configure-nextjs-for-remote-images">3.3 Configure Next.js for Remote Images</h3>
+<p>Update your Next.js config to allow loading images from your Supabase storage domain.</p>
+<p><strong><code>next.config.ts</code></strong></p>
+<pre><code class="language-ts">import type { NextConfig } from &quot;next&quot;;
+
+const nextConfig: NextConfig = {
+  images: {
+    remotePatterns: [
+      {
+        protocol: &quot;https&quot;,
+        hostname: &quot;**.supabase.co&quot;,
+      },
+    ],
+  },
+};
+
+export default nextConfig;
+</code></pre>
+<h3 id="34-create-the-environment-file">3.4 Create the Environment File</h3>
+<pre><code class="language-bash">touch .env.local
+</code></pre>
+<p>Paste your credentials into this file (see the table in Section 2.3 for where to find each value).</p>
+<h3 id="chapter-3-recap">Chapter 3 Recap</h3>
+<p>In this chapter, you:</p>
+<ol>
+<li>Scaffolded a Next.js 16 project with TypeScript, Tailwind CSS, and the App Router</li>
+<li>Installed Supabase and UUID dependencies</li>
+<li>Configured remote image patterns for Supabase</li>
+<li>Created the <code>.env.local</code> file for your secrets</li>
+</ol>
+<p>Your project skeleton is ready. Next, you will learn how the folder structure is organized and why.</p>
+<hr>
+<h2 id="chapter-4-core-architecture">Chapter 4: Core Architecture</h2>
+<h3 id="41-folder-structure">4.1 Folder Structure</h3>
+<pre><code class="language-text">coloring-book/
+├── public/                      # Static assets (favicon, images)
+├── src/
+│   ├── app/                     # Next.js App Router pages + API routes
+│   │   ├── globals.css          # Tailwind imports, custom theme, animations
+│   │   ├── layout.tsx           # Root HTML shell, font loading
+│   │   ├── page.tsx             # Home page (Create tab)
+│   │   ├── api/
+│   │   │   ├── convert/
+│   │   │   │   └── route.ts     # POST: upload photo, call OpenAI, store results
+│   │   │   └── gallery/
+│   │   │       └── route.ts     # GET: list pages, DELETE: remove a page
+│   │   ├── color/
+│   │   │   └── [id]/
+│   │   │       └── page.tsx     # Dynamic page: interactive coloring canvas
+│   │   └── gallery/
+│   │       └── page.tsx         # Gallery listing page
+│   ├── components/              # Reusable React components
+│   │   ├── BubblesBackground.tsx  # Animated floating bubble background
+│   │   ├── Card.tsx               # Glassmorphism card wrapper
+│   │   ├── ColoringCanvas.tsx     # HTML5 Canvas coloring interface
+│   │   ├── CreatePage.tsx         # Upload + convert form (client component)
+│   │   ├── DecorativeElements.tsx # Floating stars/hearts/circles
+│   │   ├── GalleryGrid.tsx        # Grid of created coloring pages
+│   │   ├── Header.tsx             # App logo + tagline
+│   │   ├── Loader.tsx             # Full-screen loading overlay
+│   │   ├── Navigation.tsx         # Tab nav (Create / Gallery)
+│   │   ├── RainbowDivider.tsx     # Gradient horizontal rule
+│   │   └── Toast.tsx              # Global toast notification system
+│   └── lib/                     # Shared utilities
+│       ├── supabase.ts          # Client-side Supabase instance (anon key)
+│       └── supabase-server.ts   # Server-side Supabase instance (service role key)
+├── .env.local                   # Environment variables (not committed)
+├── next.config.ts               # Next.js config
+├── package.json
+├── postcss.config.mjs
+├── tailwind.config.ts           # (auto via Tailwind v4 + PostCSS)
+└── tsconfig.json
+</code></pre>
+<h3 id="42-why-each-directory-exists">4.2 Why Each Directory Exists</h3>
+<ul>
+<li><strong><code>src/app/</code></strong> contains all routes. Next.js App Router uses the filesystem as route definitions. Each folder with a <code>page.tsx</code> becomes a URL.</li>
+<li><strong><code>src/app/api/</code></strong> contains server-side API route handlers. These run only on the server and access secrets like <code>OPENAI_API_KEY</code> and <code>SUPABASE_SERVICE_ROLE_KEY</code>.</li>
+<li><strong><code>src/components/</code></strong> holds reusable UI building blocks. Separating them from pages keeps your page files lean and enables reuse across routes.</li>
+<li><strong><code>src/lib/</code></strong> contains shared non-UI code. Two Supabase clients are needed: one for client-side reads (anon key) and one for server-side writes (service role key with admin privileges).</li>
+</ul>
+<h3 id="43-server-vs-client-boundaries">4.3 Server vs Client Boundaries</h3>
+<table>
+<thead>
+<tr>
+<th>File</th>
+<th>Runs On</th>
+<th>Why</th>
+</tr>
+</thead>
+<tbody><tr>
+<td><code>layout.tsx</code></td>
+<td>Server</td>
+<td>Static HTML shell, no interactivity</td>
+</tr>
+<tr>
+<td><code>page.tsx</code> (home)</td>
+<td>Server</td>
+<td>Renders server components, delegates to client children</td>
+</tr>
+<tr>
+<td><code>color/[id]/page.tsx</code></td>
+<td>Server</td>
+<td>Fetches image data from Supabase at request time</td>
+</tr>
+<tr>
+<td><code>api/convert/route.ts</code></td>
+<td>Server</td>
+<td>Processes uploads, calls OpenAI, writes to DB</td>
+</tr>
+<tr>
+<td><code>api/gallery/route.ts</code></td>
+<td>Server</td>
+<td>Reads/deletes from database</td>
+</tr>
+<tr>
+<td><code>CreatePage.tsx</code></td>
+<td>Client</td>
+<td><code>&quot;use client&quot;</code> because it manages file input state</td>
+</tr>
+<tr>
+<td><code>ColoringCanvas.tsx</code></td>
+<td>Client</td>
+<td><code>&quot;use client&quot;</code> because it uses HTML5 Canvas APIs</td>
+</tr>
+<tr>
+<td><code>GalleryGrid.tsx</code></td>
+<td>Client</td>
+<td><code>&quot;use client&quot;</code> because it fetches data on mount</td>
+</tr>
+<tr>
+<td><code>Navigation.tsx</code></td>
+<td>Client</td>
+<td><code>&quot;use client&quot;</code> because it reads current pathname</td>
+</tr>
+</tbody></table>
+<blockquote>
+<p>💡 <strong>Tip:</strong> A good rule of thumb in Next.js App Router: if a component needs browser APIs, user interaction state, or hooks like <code>useState</code>, mark it <code>&quot;use client&quot;</code>. Everything else stays as a server component by default.</p>
+</blockquote>
+<h3 id="chapter-4-recap">Chapter 4 Recap</h3>
+<p>In this chapter, you:</p>
+<ol>
+<li>Reviewed the complete folder structure and what each file does</li>
+<li>Understood why the directories are separated the way they are</li>
+<li>Learned which files run on the server vs. the client and why</li>
+</ol>
+<p>You now understand the architecture. Next, you will build every feature piece by piece.</p>
+<hr>
+<h2 id="chapter-5-feature-implementation">Chapter 5: Feature Implementation</h2>
+<blockquote>
+<p>🚨 <strong>Important:</strong> You must complete Chapters 2 and 3 before starting this chapter. The Supabase project and environment variables are prerequisites for most of what follows.</p>
+</blockquote>
+<h3 id="51-supabase-setup-database-storage">5.1 Supabase Setup (Database + Storage)</h3>
+<p>Before writing any code, you need to set up your Supabase project.</p>
+<h4 id="create-a-supabase-project">Create a Supabase Project</h4>
+<ol>
+<li>Go to <a href="https://supabase.com">https://supabase.com</a> and create a new project.</li>
+<li>Note your <strong>Project URL</strong>, <strong>anon key</strong>, and <strong>service role key</strong> from Settings &gt; API.</li>
+</ol>
+<h4 id="create-the-database-table">Create the Database Table</h4>
+<p>Open the Supabase SQL Editor and run this query:</p>
+<pre><code class="language-sql">CREATE TABLE images (
+  id UUID DEFAULT gen_random_uuid() PRIMARY KEY,
+  user_id UUID NOT NULL DEFAULT &#39;00000000-0000-0000-0000-000000000000&#39;,
+  original_url TEXT NOT NULL,
+  coloring_page_url TEXT,
+  name TEXT,
+  status TEXT DEFAULT &#39;pending&#39;,
+  created_at TIMESTAMPTZ DEFAULT now()
+);
+</code></pre>
+<p>This table stores one row per coloring page conversion, linking the original photo URL and the generated coloring page URL.</p>
+<h4 id="create-the-storage-bucket">Create the Storage Bucket</h4>
+<ol>
+<li>In Supabase Dashboard, go to <strong>Storage</strong>.</li>
+<li>Create a new bucket named <code>images</code>.</li>
+<li>Set it to <strong>Public</strong> (so images can be loaded by the browser).</li>
+<li>Optionally add a policy to allow public reads:</li>
+</ol>
+<pre><code class="language-sql">CREATE POLICY &quot;Public read access&quot; ON storage.objects
+  FOR SELECT USING (bucket_id = &#39;images&#39;);
+</code></pre>
+<blockquote>
+<p>⚠️ <strong>Warning:</strong> If you forget to make the bucket public, all image URLs will return 403 errors and nothing will display in the browser.</p>
+</blockquote>
+<h3 id="52-supabase-client-libraries">5.2 Supabase Client Libraries</h3>
+<p>You need two separate Supabase clients to enforce security boundaries.</p>
+<h4 id="client-side-client">Client-Side Client</h4>
+<p><strong><code>src/lib/supabase.ts</code></strong></p>
+<pre><code class="language-ts">import { createClient, SupabaseClient } from &quot;@supabase/supabase-js&quot;;
+
+let _supabase: SupabaseClient | null = null;
+
+export function getSupabase() {
+  if (!_supabase) {
+    _supabase = createClient(
+      process.env.NEXT_PUBLIC_SUPABASE_URL!,
+      process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY!,
+    );
+  }
+  return _supabase;
+}
+</code></pre>
+<p>This uses the <strong>anon key</strong>, which has limited permissions. It could be used in client components for read-only access to public data. In this project, client-side fetches go through the API routes instead.</p>
+<h4 id="server-side-client">Server-Side Client</h4>
+<p><strong><code>src/lib/supabase-server.ts</code></strong></p>
+<pre><code class="language-ts">import { createClient, SupabaseClient } from &quot;@supabase/supabase-js&quot;;
+
+let _supabaseAdmin: SupabaseClient | null = null;
+
+export function getSupabaseAdmin() {
+  if (!_supabaseAdmin) {
+    _supabaseAdmin = createClient(
+      process.env.NEXT_PUBLIC_SUPABASE_URL!,
+      process.env.SUPABASE_SERVICE_ROLE_KEY!,
+    );
+  }
+  return _supabaseAdmin;
+}
+</code></pre>
+<p>This uses the <strong>service role key</strong>, which bypasses Row Level Security and can perform any operation. You should only import it in server-side files (API routes and server components).</p>
+<h3 id="53-global-layout-and-styling">5.3 Global Layout and Styling</h3>
+<h4 id="root-layout">Root Layout</h4>
+<p><strong><code>src/app/layout.tsx</code></strong></p>
+<pre><code class="language-tsx">import type { Metadata } from &quot;next&quot;;
+import { Nunito } from &quot;next/font/google&quot;;
+import &quot;./globals.css&quot;;
+
+const nunito = Nunito({
+  variable: &quot;--font-nunito-var&quot;,
+  subsets: [&quot;latin&quot;],
+  weight: [&quot;400&quot;, &quot;600&quot;, &quot;700&quot;, &quot;800&quot;, &quot;900&quot;],
+});
+
+export const metadata: Metadata = {
+  title: &quot;ColorSplash — Turn Photos into Coloring Pages&quot;,
+  description:
+    &quot;Upload any photo and transform it into a beautiful coloring book page.&quot;,
+};
+
+export default function RootLayout({
+  children,
+}: Readonly&lt;{ children: React.ReactNode }&gt;) {
+  return (
+    &lt;html lang=&quot;en&quot;&gt;
+      &lt;body className={`${nunito.variable} antialiased`}&gt;{children}&lt;/body&gt;
+    &lt;/html&gt;
+  );
+}
+</code></pre>
+<p>Key decisions:</p>
+<ul>
+<li><strong>Nunito font</strong> is loaded via <code>next/font/google</code> for optimal performance (self-hosted, no external requests at runtime).</li>
+<li>The font is assigned to a CSS variable <code>--font-nunito-var</code> and referenced in <code>globals.css</code>.</li>
+</ul>
+<h4 id="global-css">Global CSS</h4>
+<p><strong><code>src/app/globals.css</code></strong></p>
+<pre><code class="language-css">@import &quot;tailwindcss&quot;;
+
+@theme inline {
+  --color-pink-candy: #ff6b9d;
+  --color-lavender: #c084fc;
+  --color-mint: #6ee7b7;
+  --color-peach: #fbbf24;
+  --color-baby-blue: #7dd3fc;
+  --color-pink-light: #fff0f5;
+  --color-lavender-light: #f5f0ff;
+  --color-plum: #4a3060;
+  --color-plum-light: #7c6a96;
+  --color-plum-muted: #9b8ab8;
+  --color-plum-hint: #b8a5cc;
+  --color-glass-bg: rgba(255, 255, 255, 0.55);
+  --color-glass-border: rgba(255, 255, 255, 0.7);
+  --font-nunito: var(--font-nunito-var);
+  /* Animation keyframes also defined here */
+}
+</code></pre>
+<p>This uses Tailwind CSS v4&#39;s <code>@theme inline</code> directive to define custom design tokens directly accessible in utility classes (e.g., <code>text-plum</code>, <code>bg-mint</code>). Custom keyframe animations handle the floating bubbles, twinkling decorations, and loader dots.</p>
+<h3 id="54-ui-components">5.4 UI Components</h3>
+<h4 id="card-component">Card Component</h4>
+<p><strong><code>src/components/Card.tsx</code></strong></p>
+<pre><code class="language-tsx">import { ReactNode } from &quot;react&quot;;
+
+export default function Card({
+  children,
+  className = &quot;&quot;,
+}: {
+  children: ReactNode;
+  className?: string;
+}) {
+  return (
+    &lt;div
+      className={`rounded-[32px] p-8 mb-6 transition-shadow duration-300 ${className}`}
+      style={{
+        background: &quot;rgba(255, 255, 255, 0.55)&quot;,
+        border: &quot;1.5px solid rgba(255, 255, 255, 0.7)&quot;,
+        backdropFilter: &quot;blur(18px)&quot;,
+        WebkitBackdropFilter: &quot;blur(18px)&quot;,
+        boxShadow:
+          &quot;0 8px 32px rgba(192,132,252,0.10), 0 1.5px 6px rgba(0,0,0,0.04)&quot;,
+      }}
+    &gt;
+      {children}
+    &lt;/div&gt;
+  );
+}
+</code></pre>
+<p>The glassmorphism effect is achieved with <code>backdrop-filter: blur()</code> and a semi-transparent white background. You will use this <code>Card</code> wrapper throughout the entire app.</p>
+<h4 id="header">Header</h4>
+<p><strong><code>src/components/Header.tsx</code></strong></p>
+<pre><code class="language-tsx">export default function Header() {
+  return (
+    &lt;header className=&quot;text-center mb-8 relative z-10&quot;&gt;
+      &lt;h1
+        className=&quot;text-5xl font-black tracking-tight mb-2&quot;
+        style={{
+          background: &quot;linear-gradient(135deg, #FF6B9D, #C084FC, #7DD3FC)&quot;,
+          WebkitBackgroundClip: &quot;text&quot;,
+          WebkitTextFillColor: &quot;transparent&quot;,
+          animation: &quot;logoShimmer 6s ease-in-out infinite alternate&quot;,
+        }}
+      &gt;
+        ColorSplash 🎨
+      &lt;/h1&gt;
+      &lt;p className=&quot;text-plum-muted text-lg font-semibold&quot;&gt;
+        Turn your photos into magical coloring pages!
+      &lt;/p&gt;
+    &lt;/header&gt;
+  );
+}
+</code></pre>
+<p>The gradient text effect uses <code>background-clip: text</code> with a transparent text fill color.</p>
+<h4 id="navigation">Navigation</h4>
+<p><strong><code>src/components/Navigation.tsx</code></strong></p>
+<pre><code class="language-tsx">&quot;use client&quot;;
+import Link from &quot;next/link&quot;;
+import { usePathname } from &quot;next/navigation&quot;;
+
+const NAV_ITEMS = [
+  { href: &quot;/&quot;, label: &quot;✨ Create&quot;, key: &quot;create&quot; },
+  { href: &quot;/gallery&quot;, label: &quot;🖼️ Gallery&quot;, key: &quot;gallery&quot; },
+];
+
+export default function Navigation() {
+  const pathname = usePathname();
+  return (
+    &lt;nav className=&quot;flex justify-center gap-3 mb-8 relative z-10&quot;&gt;
+      {NAV_ITEMS.map((item) =&gt; {
+        const isActive =
+          item.key === &quot;create&quot;
+            ? pathname === &quot;/&quot;
+            : pathname.startsWith(`/${item.key}`);
+        return (
+          &lt;Link
+            key={item.key}
+            href={item.href}
+            className=&quot;px-6 py-3 rounded-full font-extrabold text-sm transition-all&quot;
+            style={{
+              background: isActive
+                ? &quot;linear-gradient(135deg, #FF6B9D, #C084FC)&quot;
+                : &quot;rgba(255, 255, 255, 0.55)&quot;,
+              color: isActive ? &quot;#fff&quot; : &quot;#7C6A96&quot;,
+            }}
+          &gt;
+            {item.label}
+          &lt;/Link&gt;
+        );
+      })}
+    &lt;/nav&gt;
+  );
+}
+</code></pre>
+<h4 id="decorative-components">Decorative Components</h4>
+<p>These components create the playful visual identity of the app:</p>
+<ul>
+<li><strong><code>BubblesBackground</code></strong>: Creates 18 randomly sized, colored circles that float upward using CSS animations. Uses <code>useEffect</code> to generate DOM elements on mount.</li>
+<li><strong><code>DecorativeElements</code></strong>: Renders fixed-position stars, hearts, and circles at various screen positions with twinkling animations. Uses CSS <code>clip-path</code> for star and heart shapes.</li>
+<li><strong><code>RainbowDivider</code></strong>: A simple gradient horizontal line used to separate content sections.</li>
+<li><strong><code>Loader</code></strong>: A full-screen overlay with bouncing colored dots, shown during the conversion process.</li>
+<li><strong><code>Toast</code></strong>: A global notification system using a module-level variable (<code>addToastGlobal</code>) so any file can call <code>showToast(&quot;message&quot;)</code> without prop drilling.</li>
+</ul>
+<h3 id="55-create-page-upload-convert-flow">5.5 Create Page (Upload + Convert Flow)</h3>
+<p>The <code>CreatePage</code> component is the core user interaction. This is where users upload a photo and trigger the conversion.</p>
+<p><strong><code>src/components/CreatePage.tsx</code></strong></p>
+<pre><code class="language-tsx">&quot;use client&quot;;
+import { useState, useRef, useCallback } from &quot;react&quot;;
+import { useRouter } from &quot;next/navigation&quot;;
+
+export default function CreatePage() {
+  const [file, setFile] = useState&lt;File | null&gt;(null);
+  const [preview, setPreview] = useState&lt;string | null&gt;(null);
+  const [result, setResult] = useState&lt;{
+    id: string;
+    coloringPageUrl: string;
+  } | null&gt;(null);
+  const [loading, setLoading] = useState(false);
+
+  const handleConvert = async () =&gt; {
+    if (!file) return;
+    setLoading(true);
+    try {
+      const formData = new FormData();
+      formData.append(&quot;image&quot;, file);
+      const res = await fetch(&quot;/api/convert&quot;, {
+        method: &quot;POST&quot;,
+        body: formData,
+      });
+      const data = await res.json();
+      if (!res.ok) {
+        showToast(data.error);
+        return;
+      }
+      setResult({ id: data.id, coloringPageUrl: data.coloringPageUrl });
+    } finally {
+      setLoading(false);
+    }
+  };
+  // ... renders upload dropzone, preview, convert button, result card
+}
+</code></pre>
+<p>Here is the user flow:</p>
+<ol>
+<li>Drag-and-drop or click to select an image file</li>
+<li>Client-side validation checks file type (JPG/PNG/WEBP) and size (max 20MB)</li>
+<li>A preview is shown using <code>URL.createObjectURL()</code></li>
+<li>Click &quot;Convert to Coloring Page&quot; to send the FormData to <code>/api/convert</code></li>
+<li>While processing, a full-screen <code>Loader</code> overlay is displayed</li>
+<li>On success, the result card appears with Download, Color It, and New Image buttons</li>
+</ol>
+<h3 id="56-convert-api-route">5.6 Convert API Route</h3>
+<p>This is the server-side brain of your app.</p>
+<p><strong><code>src/app/api/convert/route.ts</code></strong></p>
+<pre><code class="language-ts">export async function POST(req: NextRequest) {
+  // 1. Parse FormData and extract the uploaded file
+  const formData = await req.formData();
+  const file = formData.get(&quot;image&quot;) as File | null;
+
+  // 2. Validate file type and size
+  const allowedTypes = [&quot;image/jpeg&quot;, &quot;image/png&quot;, &quot;image/webp&quot;];
+  if (!allowedTypes.includes(file.type)) {
+    /* return 400 */
+  }
+  if (file.size &gt; 20 * 1024 * 1024) {
+    /* return 400 */
+  }
+
+  // 3. Read file into a Buffer
+  const arrayBuffer = await file.arrayBuffer();
+  const buffer = Buffer.from(arrayBuffer);
+
+  // 4. Upload original to Supabase Storage
+  const fileId = uuidv4();
+  await supabaseAdmin.storage
+    .from(&quot;images&quot;)
+    .upload(`originals/${fileId}.${ext}`, buffer, { contentType: file.type });
+
+  // 5. Get the public URL of the original
+  const originalUrl = supabaseAdmin.storage
+    .from(&quot;images&quot;)
+    .getPublicUrl(`originals/${fileId}.${ext}`);
+
+  // 6. Call OpenAI gpt-image-1 API
+  const openaiFormData = new FormData();
+  openaiFormData.append(&quot;model&quot;, &quot;gpt-image-1&quot;);
+  openaiFormData.append(
+    &quot;prompt&quot;,
+    &quot;Convert this photo into a black and white coloring book page...&quot;,
+  );
+  openaiFormData.append(&quot;image[]&quot;, imageBlob, `image.${ext}`);
+  openaiFormData.append(&quot;size&quot;, &quot;1024x1024&quot;);
+
+  const openaiRes = await fetch(&quot;https://api.openai.com/v1/images/edits&quot;, {
+    method: &quot;POST&quot;,
+    headers: { Authorization: `Bearer ${apiKey}` },
+    body: openaiFormData,
+  });
+
+  // 7. Extract result (base64 or URL)
+  const resultB64 = openaiData.data?.[0]?.b64_json;
+  const coloringPageBuffer = Buffer.from(resultB64, &quot;base64&quot;);
+
+  // 8. Upload coloring page to Supabase Storage
+  await supabaseAdmin.storage
+    .from(&quot;images&quot;)
+    .upload(`coloring-pages/${fileId}.png`, coloringPageBuffer);
+
+  // 9. Insert database record
+  const { data: dbRecord } = await supabaseAdmin
+    .from(&quot;images&quot;)
+    .insert({
+      user_id: &quot;00000000-0000-0000-0000-000000000000&quot;,
+      original_url: originalUrlData.publicUrl,
+      coloring_page_url: coloringUrlData.publicUrl,
+      name: file.name,
+      status: &quot;completed&quot;,
+    })
+    .select(&quot;id&quot;)
+    .single();
+
+  // 10. Return ID and URLs to the client
+  return NextResponse.json({
+    id: dbRecord.id,
+    originalUrl: originalUrlData.publicUrl,
+    coloringPageUrl: coloringUrlData.publicUrl,
+  });
+}
+</code></pre>
+<blockquote>
+<p>📝 <strong>Note:</strong> The <code>export const maxDuration = 60;</code> at the top of this file increases the serverless function timeout to 60 seconds. OpenAI image generation can take a while, so this prevents premature timeouts on platforms like Vercel.</p>
+</blockquote>
+<h3 id="57-gallery-api-route">5.7 Gallery API Route</h3>
+<p>This route provides two handlers for listing and deleting coloring pages.</p>
+<p><strong><code>src/app/api/gallery/route.ts</code></strong></p>
+<pre><code class="language-ts">// GET: Fetch all completed coloring pages, newest first
+export async function GET() {
+  const { data } = await supabase
+    .from(&quot;images&quot;)
+    .select(&quot;*&quot;)
+    .eq(&quot;status&quot;, &quot;completed&quot;)
+    .order(&quot;created_at&quot;, { ascending: false });
+  return NextResponse.json(data);
+}
+
+// DELETE: Remove a specific coloring page by ID
+export async function DELETE(request: NextRequest) {
+  const { id } = await request.json();
+  await supabase.from(&quot;images&quot;).delete().eq(&quot;id&quot;, id);
+  return NextResponse.json({ success: true });
+}
+</code></pre>
+<h3 id="58-gallery-page">5.8 Gallery Page</h3>
+<p>This is a simple server component page that renders shared layout elements and the <code>GalleryGrid</code> client component.</p>
+<p><strong><code>src/app/gallery/page.tsx</code></strong></p>
+<pre><code class="language-tsx">export default function GalleryPage() {
+  return (
+    &lt;&gt;
+      &lt;BubblesBackground /&gt;
+      &lt;DecorativeElements /&gt;
+      &lt;main className=&quot;relative z-10 max-w-[780px] mx-auto px-5 pt-8 pb-16&quot;&gt;
+        &lt;Header /&gt;
+        &lt;Navigation /&gt;
+        &lt;h2&gt;Your Coloring Pages&lt;/h2&gt;
+        &lt;GalleryGrid /&gt;
+      &lt;/main&gt;
+    &lt;/&gt;
+  );
+}
+</code></pre>
+<p>The <code>GalleryGrid</code> component fetches <code>/api/gallery</code> on mount and renders a responsive 2-column grid. Each card shows the original vs. coloring page side by side, with Color, Save, and Delete buttons.</p>
+<h3 id="59-coloring-canvas-page">5.9 Coloring Canvas Page</h3>
+<p>This is a dynamic server component that fetches coloring page data at request time.</p>
+<p><strong><code>src/app/color/[id]/page.tsx</code></strong></p>
+<pre><code class="language-tsx">export const dynamic = &quot;force-dynamic&quot;;
+
+export default async function ColorPage({ params }: PageProps) {
+  const { id } = await params;
+  const supabase = getSupabaseAdmin();
+  const { data, error } = await supabase
+    .from(&quot;images&quot;)
+    .select(&quot;*&quot;)
+    .eq(&quot;id&quot;, id)
+    .single();
+
+  if (error || !data) {
+    return /* 404-style &quot;not found&quot; UI */;
+  }
+
+  return &lt;ColoringCanvas imageUrl={data.coloring_page_url} pageId={id} /&gt;;
+}
+</code></pre>
+<p>The <code>force-dynamic</code> export ensures the page is server-rendered on every request (not statically cached), so it always fetches fresh data.</p>
+<h3 id="510-interactive-coloring-canvas">5.10 Interactive Coloring Canvas</h3>
+<p>This is the most complex component. It implements a full browser-based coloring tool using two layered HTML5 canvases.</p>
+<p><strong><code>src/components/ColoringCanvas.tsx</code></strong></p>
+<p>The two-canvas architecture:</p>
+<pre><code class="language-text">[ Background Canvas (bgCanvasRef) ]  -- Displays the coloring page image
+[ Drawing Canvas (canvasRef) ]       -- Transparent overlay, captures strokes
+</code></pre>
+<p><strong>Features:</strong></p>
+<ul>
+<li>16 preset colors + a custom color picker</li>
+<li>4 brush sizes (S/M/L/XL)</li>
+<li>Eraser mode (draws white)</li>
+<li>Undo (stores up to 20 <code>ImageData</code> snapshots)</li>
+<li>Reset (clears all strokes)</li>
+<li>Download (composites both canvases into a single PNG)</li>
+</ul>
+<p><strong>How drawing works:</strong></p>
+<ol>
+<li>The coloring page image is loaded onto the background canvas</li>
+<li><code>onPointerDown</code> starts a new stroke, <code>onPointerMove</code> draws lines using <code>canvas.getContext(&quot;2d&quot;)</code> methods</li>
+<li><code>onPointerUp</code> saves the current canvas state to the undo history</li>
+<li><code>touch-action: none</code> on the canvas prevents mobile scroll interference</li>
+<li>Pointer events (not mouse events) are used for unified mouse + touch support</li>
+</ol>
+<p><strong>Download compositing:</strong></p>
+<pre><code class="language-ts">const exportCanvas = document.createElement(&quot;canvas&quot;);
+const ctx = exportCanvas.getContext(&quot;2d&quot;)!;
+ctx.drawImage(bgCanvas, 0, 0); // Draw the coloring page
+ctx.drawImage(drawCanvas, 0, 0); // Draw the user&#39;s strokes on top
+link.href = exportCanvas.toDataURL(&quot;image/png&quot;);
+</code></pre>
+<blockquote>
+<p>💡 <strong>Tip:</strong> The two-canvas architecture is what makes undo and reset so simple. Since your strokes are on a separate transparent canvas, resetting means clearing one canvas without touching the background image at all.</p>
+</blockquote>
+<h3 id="511-toast-notification-system">5.11 Toast Notification System</h3>
+<p>This component uses a clever pattern to enable global toast access without React context.</p>
+<p><strong><code>src/components/Toast.tsx</code></strong></p>
+<pre><code class="language-tsx">let addToastGlobal:
+  | ((message: string, type?: &quot;error&quot; | &quot;success&quot;) =&gt; void)
+  | null = null;
+
+export function showToast(
+  message: string,
+  type: &quot;error&quot; | &quot;success&quot; = &quot;error&quot;,
+) {
+  addToastGlobal?.(message, type);
+}
+
+export default function ToastContainer() {
+  const addToast = useCallback((message: string, type) =&gt; {
+    // Add toast to state, auto-remove after 4 seconds
+  }, []);
+
+  useEffect(() =&gt; {
+    addToastGlobal = addToast; // Register the function globally
+  }, [addToast]);
+}
+</code></pre>
+<p>Any component can <code>import { showToast } from &quot;@/components/Toast&quot;</code> and call it directly. You just need to render the <code>ToastContainer</code> once in your page tree.</p>
+<h3 id="chapter-5-recap">Chapter 5 Recap</h3>
+<p>In this chapter, you:</p>
+<ol>
+<li>Set up Supabase with a database table and storage bucket</li>
+<li>Created two Supabase client wrappers (anon for client, service role for server)</li>
+<li>Built the root layout with Nunito font and a custom Tailwind CSS theme</li>
+<li>Created reusable UI components (Card, Header, Navigation, decorative elements)</li>
+<li>Built the upload and convert flow in <code>CreatePage</code></li>
+<li>Implemented the <code>/api/convert</code> route with OpenAI integration</li>
+<li>Created the gallery API, gallery page, and gallery grid</li>
+<li>Built the dynamic coloring canvas page with a two-canvas drawing system</li>
+<li>Added a global toast notification system</li>
+</ol>
+<p>You now have every feature implemented. Next, you will take a closer look at the external service integrations.</p>
+<hr>
+<h2 id="chapter-6-external-integrations">Chapter 6: External Integrations</h2>
+<h3 id="61-supabase">6.1 Supabase</h3>
+<p><strong>Why it is used:</strong> Supabase provides both a PostgreSQL database (for storing image metadata) and an S3-compatible object storage bucket (for storing the actual image files). This eliminates the need to manage separate database and file hosting services.</p>
+<p><strong>How to configure it:</strong></p>
+<ol>
+<li>Create a Supabase project at supabase.com</li>
+<li>In the SQL Editor, create the <code>images</code> table (see Section 5.1)</li>
+<li>In Storage, create a public bucket named <code>images</code></li>
+<li>Copy the Project URL, anon key, and service role key into <code>.env.local</code></li>
+</ol>
+<p><strong>Where keys are stored:</strong></p>
+<ul>
+<li><code>NEXT_PUBLIC_SUPABASE_URL</code> and <code>NEXT_PUBLIC_SUPABASE_ANON_KEY</code> are prefixed with <code>NEXT_PUBLIC_</code>, making them available on both client and server. This is safe because the anon key has limited permissions.</li>
+<li><code>SUPABASE_SERVICE_ROLE_KEY</code> has <strong>no</strong> <code>NEXT_PUBLIC_</code> prefix, so it is only available on the server. This key bypasses Row Level Security and should never be exposed to the browser.</li>
+</ul>
+<p><strong>Security considerations:</strong></p>
+<ul>
+<li>The service role key can perform any database operation. Only use it in API routes and server components.</li>
+<li>Consider adding Row Level Security (RLS) policies to the <code>images</code> table if you plan to add user authentication.</li>
+<li>The storage bucket is public, meaning anyone with the URL can view stored images. This is intentional for this app.</li>
+</ul>
+<p><strong>Common mistakes:</strong></p>
+<ul>
+<li>Forgetting to make the storage bucket public (images will return 403 errors)</li>
+<li>Swapping the anon key and service role key</li>
+<li>Missing the <code>NEXT_PUBLIC_</code> prefix for the URL and anon key (they will be <code>undefined</code> at build time)</li>
+</ul>
+<h3 id="62-openai-gpt-image-1">6.2 OpenAI (gpt-image-1)</h3>
+<p><strong>Why it is used:</strong> The <code>gpt-image-1</code> model accepts an existing image and a text prompt, then returns an edited version. You use it here to transform photos into black-and-white coloring book outlines.</p>
+<p><strong>How to configure it:</strong></p>
+<ol>
+<li>Sign up at platform.openai.com</li>
+<li>Create an API key</li>
+<li>Ensure your account has billing enabled and access to the <code>gpt-image-1</code> model</li>
+<li>Add the key to <code>.env.local</code> as <code>OPENAI_API_KEY</code></li>
+</ol>
+<p><strong>API call details:</strong></p>
+<ul>
+<li>Endpoint: <code>POST https://api.openai.com/v1/images/edits</code></li>
+<li>The image is sent as a <code>FormData</code> blob under the field <code>image[]</code></li>
+<li>The prompt instructs the model to create clean coloring book outlines</li>
+<li>Output size is fixed at <code>1024x1024</code></li>
+<li>The response includes either <code>b64_json</code> (base64-encoded PNG) or a <code>url</code></li>
+</ul>
+<p><strong>Where the key is stored:</strong> <code>OPENAI_API_KEY</code> in <code>.env.local</code> (server-only, no <code>NEXT_PUBLIC_</code> prefix).</p>
+<blockquote>
+<p>⚠️ <strong>Warning:</strong> Your OpenAI API key is tied to your billing account. If it leaks, someone else can run up charges. Keep it server-only and out of version control.</p>
+</blockquote>
+<p><strong>Common mistakes:</strong></p>
+<ul>
+<li>Using an API key without billing enabled (will return 429 errors)</li>
+<li>Not setting <code>maxDuration</code> (the default serverless timeout may be too short)</li>
+<li>Forgetting to handle both <code>b64_json</code> and <code>url</code> response formats</li>
+</ul>
+<h3 id="chapter-6-recap">Chapter 6 Recap</h3>
+<p>In this chapter, you:</p>
+<ol>
+<li>Reviewed how Supabase is configured for database and storage</li>
+<li>Understood the security model for Supabase keys</li>
+<li>Learned how the OpenAI gpt-image-1 API is called and configured</li>
+<li>Identified common integration mistakes and how to avoid them</li>
+</ol>
+<p>Your integrations are solid. Next, you will learn how to run the app.</p>
+<hr>
+<h2 id="chapter-7-running-the-app">Chapter 7: Running the App</h2>
+<h3 id="71-development-mode">7.1 Development Mode</h3>
+<pre><code class="language-bash">npm run dev
+</code></pre>
+<p>This starts the Next.js development server (with Turbopack) at <code>http://localhost:3000</code>.</p>
+<h3 id="72-production-build">7.2 Production Build</h3>
+<pre><code class="language-bash">npm run build
+npm start
+</code></pre>
+<p><code>npm run build</code> compiles the app for production. <code>npm start</code> runs the compiled app.</p>
+<h3 id="73-environment-setup-checklist">7.3 Environment Setup Checklist</h3>
+<p>Before running, verify:</p>
+<ol>
+<li><code>.env.local</code> exists with all four environment variables</li>
+<li>Supabase project is created with:<ul>
+<li>An <code>images</code> table (see SQL in Section 5.1)</li>
+<li>A public <code>images</code> storage bucket</li>
+</ul>
+</li>
+<li>OpenAI API key is active with billing enabled</li>
+<li>Node.js v18.17+ is installed</li>
+</ol>
+<h3 id="74-verifying-everything-works">7.4 Verifying Everything Works</h3>
+<ol>
+<li>Open <code>http://localhost:3000</code></li>
+<li>Upload a photo (JPG, PNG, or WEBP under 20MB)</li>
+<li>Click &quot;Convert to Coloring Page&quot;</li>
+<li>Wait for the conversion (can take 10-30 seconds)</li>
+<li>The coloring page should appear</li>
+<li>Click &quot;Color It!&quot; to test the canvas</li>
+<li>Navigate to Gallery to see your saved pages</li>
+</ol>
+<blockquote>
+<p>💡 <strong>Tip:</strong> If the conversion seems stuck, check your terminal for server-side error logs. The most common issue is an invalid or missing <code>OPENAI_API_KEY</code>.</p>
+</blockquote>
+<h3 id="chapter-7-recap">Chapter 7 Recap</h3>
+<p>In this chapter, you:</p>
+<ol>
+<li>Ran the app in development mode</li>
+<li>Learned how to create a production build</li>
+<li>Walked through the environment setup checklist</li>
+<li>Verified the full user flow end-to-end</li>
+</ol>
+<p>Your app is running. Next, you will learn how to diagnose common problems.</p>
+<hr>
+<h2 id="chapter-8-troubleshooting">Chapter 8: Troubleshooting</h2>
+<h3 id="81-missing-environment-variables">8.1 Missing Environment Variables</h3>
+<p><strong>Symptom:</strong> &quot;OpenAI API key not configured on the server&quot; or Supabase connection errors.
+<strong>Fix:</strong> Ensure <code>.env.local</code> has all four variables. Restart the dev server after changes.</p>
+<h3 id="82-openai-api-errors">8.2 OpenAI API Errors</h3>
+<p><strong>Symptom:</strong> 502 error from <code>/api/convert</code> with an OpenAI error message.
+<strong>Common causes:</strong></p>
+<ul>
+<li>Invalid or expired API key</li>
+<li>Billing not enabled on OpenAI account</li>
+<li>Rate limit exceeded</li>
+<li>Model <code>gpt-image-1</code> not available to your account</li>
+</ul>
+<p><strong>Fix:</strong> Check the server console for the specific OpenAI error message.</p>
+<h3 id="83-function-timeout">8.3 Function Timeout</h3>
+<p><strong>Symptom:</strong> The conversion request times out or returns a 504.
+<strong>Cause:</strong> The OpenAI image generation can take up to 60 seconds.
+<strong>Fix:</strong> The <code>maxDuration = 60</code> export in the convert route handles this for Vercel deployments. For other hosting, ensure your server allows 60+ second request durations.</p>
+<h3 id="84-supabase-storage-403-errors">8.4 Supabase Storage 403 Errors</h3>
+<p><strong>Symptom:</strong> Images fail to load in the browser.
+<strong>Cause:</strong> The storage bucket is not public, or RLS policies block reads.
+<strong>Fix:</strong> Make the <code>images</code> bucket public in Supabase Dashboard &gt; Storage.</p>
+<h3 id="85-cors-issues">8.5 CORS Issues</h3>
+<p><strong>Symptom:</strong> Canvas <code>crossOrigin</code> errors when drawing or downloading colored pages.
+<strong>Cause:</strong> The coloring page image is loaded from a Supabase URL. Canvas requires CORS headers to export image data.
+<strong>Fix:</strong> Supabase Storage serves CORS headers by default. Ensure you set <code>img.crossOrigin = &quot;anonymous&quot;</code> before setting the <code>src</code> (already done in <code>ColoringCanvas.tsx</code>).</p>
+<h3 id="86-file-too-large">8.6 File Too Large</h3>
+<p><strong>Symptom:</strong> &quot;File too large. Maximum 20MB.&quot; error.
+<strong>Fix:</strong> Resize your image before uploading. The 20MB limit is enforced both client-side and server-side.</p>
+<h3 id="87-database-table-missing">8.7 Database Table Missing</h3>
+<p><strong>Symptom:</strong> &quot;Failed to save record&quot; errors.
+<strong>Fix:</strong> Run the SQL from Section 5.1 in the Supabase SQL Editor to create the <code>images</code> table.</p>
+<h3 id="chapter-8-recap">Chapter 8 Recap</h3>
+<p>In this chapter, you learned how to diagnose and fix:</p>
+<ol>
+<li>Missing environment variables</li>
+<li>OpenAI API errors and billing issues</li>
+<li>Serverless function timeouts</li>
+<li>Supabase storage permission problems</li>
+<li>CORS issues with the coloring canvas</li>
+<li>File size limitations</li>
+<li>Missing database table errors</li>
+</ol>
+<p>You can now troubleshoot confidently. Next, you will dive deeper into the architecture decisions.</p>
+<hr>
+<h2 id="chapter-9-architecture-deep-dive">Chapter 9: Architecture Deep Dive</h2>
+<h3 id="91-why-this-design-works">9.1 Why This Design Works</h3>
+<ol>
+<li><strong>Server-side API routes protect secrets.</strong> Your OpenAI key and Supabase service role key never leave the server.</li>
+<li><strong>Supabase as a unified backend.</strong> Using one service for both database and file storage simplifies deployment and reduces moving parts.</li>
+<li><strong>Two-canvas compositing.</strong> By separating the background image from your drawings, undo/reset is trivial (just clear the drawing canvas) and download is a simple composite.</li>
+<li><strong>Module-level toast function.</strong> The <code>showToast()</code> pattern avoids React context boilerplate while still being reactive.</li>
+</ol>
+<h3 id="92-where-scalability-bottlenecks-could-appear">9.2 Where Scalability Bottlenecks Could Appear</h3>
+<ul>
+<li><strong>OpenAI API costs:</strong> Each conversion calls the <code>gpt-image-1</code> model. At scale, this becomes expensive. Consider caching results or adding rate limiting per user.</li>
+<li><strong>No user authentication:</strong> Currently, all images are stored under a hardcoded <code>user_id</code>. Adding auth (Supabase Auth) would be needed for multi-user support.</li>
+<li><strong>No pagination:</strong> The gallery fetches all images at once. For hundreds of pages, add cursor-based pagination.</li>
+<li><strong>Storage costs:</strong> Every conversion stores two images (original + coloring page). Consider adding cleanup for old/unused images.</li>
+<li><strong>Undo history in memory:</strong> The coloring canvas stores up to 20 full <code>ImageData</code> snapshots in state. For very large canvases, this could consume significant memory.</li>
+</ul>
+<h3 id="93-what-could-be-refactored">9.3 What Could Be Refactored</h3>
+<ul>
+<li><strong>Extract the OpenAI call</strong> into a separate <code>lib/openai.ts</code> module for testability.</li>
+<li><strong>Add proper error types</strong> instead of returning string messages.</li>
+<li><strong>Move inline styles</strong> into Tailwind utilities or CSS modules. Many components use <code>style={{}}</code> for gradients and glassmorphism that could be custom Tailwind utilities.</li>
+<li><strong>Add a loading skeleton</strong> to the gallery grid instead of the current spinner.</li>
+<li><strong>Consider server actions</strong> for the convert flow instead of a manual <code>fetch()</code> to an API route.</li>
+</ul>
+<h3 id="94-how-to-productionize-it">9.4 How to Productionize It</h3>
+<ol>
+<li><strong>Add authentication</strong> using Supabase Auth to associate images with real users.</li>
+<li><strong>Add rate limiting</strong> on the <code>/api/convert</code> route (e.g., 10 conversions per hour per IP).</li>
+<li><strong>Add RLS policies</strong> to the <code>images</code> table so users can only see their own pages.</li>
+<li><strong>Deploy to Vercel</strong> for automatic serverless function support with the <code>maxDuration</code> setting.</li>
+<li><strong>Add monitoring</strong> (Vercel Analytics, Sentry) for error tracking.</li>
+<li><strong>Add image optimization</strong> using Next.js <code>&lt;Image&gt;</code> component for gallery thumbnails.</li>
+</ol>
+<h3 id="chapter-9-recap">Chapter 9 Recap</h3>
+<p>In this chapter, you:</p>
+<ol>
+<li>Understood why the current architecture works well for this use case</li>
+<li>Identified five areas where scalability bottlenecks could emerge</li>
+<li>Reviewed potential refactoring improvements</li>
+<li>Got a roadmap for productionizing the app</li>
+</ol>
+<p>You have a thorough understanding of the architecture. Finally, you will learn how to simplify the app if you need a lighter version.</p>
+<hr>
+<h2 id="chapter-10-lightweight-version-guidance">Chapter 10: Lightweight Version Guidance</h2>
+<h3 id="101-remove-supabase-local-only-version">10.1 Remove Supabase (Local-Only Version)</h3>
+<p>If you want to run the app without Supabase:</p>
+<ol>
+<li><strong>Replace storage with local filesystem.</strong> In the convert API route, write files to <code>public/uploads/</code> instead of Supabase Storage.</li>
+<li><strong>Replace the database with a JSON file.</strong> Store image metadata in a <code>data/images.json</code> file, read/write with <code>fs</code>.</li>
+<li><strong>Remove the dependency:</strong><pre><code class="language-bash">npm uninstall @supabase/supabase-js
+</code></pre>
+</li>
+<li><strong>Delete</strong> <code>src/lib/supabase.ts</code> and <code>src/lib/supabase-server.ts</code>.</li>
+<li><strong>Remove</strong> <code>NEXT_PUBLIC_SUPABASE_URL</code>, <code>NEXT_PUBLIC_SUPABASE_ANON_KEY</code>, and <code>SUPABASE_SERVICE_ROLE_KEY</code> from <code>.env.local</code>.</li>
+</ol>
+<h3 id="102-remove-the-gallery">10.2 Remove the Gallery</h3>
+<p>Delete <code>src/app/gallery/</code>, <code>src/components/GalleryGrid.tsx</code>, <code>src/app/api/gallery/route.ts</code>, and the Gallery link from <code>Navigation.tsx</code>.</p>
+<h3 id="103-single-page-version">10.3 Single-Page Version</h3>
+<p>To make the simplest possible version:</p>
+<ol>
+<li>Keep only the home page (<code>/</code>) with <code>CreatePage</code></li>
+<li>Remove <code>/gallery</code> and <code>/color/[id]</code> routes</li>
+<li>Remove the Navigation component</li>
+<li>After conversion, show the result image with a download button (no coloring canvas)</li>
+<li>This reduces the app to: upload &gt; convert &gt; download</li>
+</ol>
+<h3 id="104-replace-openai-with-a-free-alternative">10.4 Replace OpenAI with a Free Alternative</h3>
+<p>If you want to avoid OpenAI costs:</p>
+<ol>
+<li>Use a client-side image filter library (e.g., apply edge detection with Canvas APIs) to create a coloring-book effect locally.</li>
+<li>Replace the OpenAI call in <code>/api/convert</code> with another image processing API.</li>
+<li>The quality will be lower, but there are no API costs.</li>
+</ol>
+<blockquote>
+<p>📝 <strong>Note:</strong> The local edge-detection approach produces much simpler outlines compared to OpenAI&#39;s AI-generated result. For a demo or prototype, it works fine. For production quality, the AI approach is significantly better.</p>
+</blockquote>
+<h3 id="chapter-10-recap">Chapter 10 Recap</h3>
+<p>In this chapter, you learned how to:</p>
+<ol>
+<li>Replace Supabase with local filesystem and JSON storage</li>
+<li>Strip out the gallery feature</li>
+<li>Reduce the app to a single upload-convert-download page</li>
+<li>Swap OpenAI for a free client-side alternative</li>
+</ol>
+<p>You now have all the knowledge you need to build, run, customize, and simplify ColorSplash from scratch.</p>
+
+</div>
+
+<!-- Footer -->
+<footer>
+  <div class="geo-shapes">
+    <span class="shape shape-hex" style="background: var(--blue);"></span>
+    <span class="shape shape-tri" style="background: var(--yellow);"></span>
+    <span class="shape shape-circle" style="background: var(--red);"></span>
+    <span class="shape shape-hex" style="background: var(--green);"></span>
+    <span class="shape shape-tri" style="background: var(--purple);"></span>
+  </div>
+  ColorSplash Tutorial &copy; 2026 &mdash; Geometric Bold Edition
+</footer>
+
+</div>
+
+<!-- Back to top button -->
+<button class="back-to-top" onclick="window.scrollTo({top:0,behavior:'smooth'})" aria-label="Back to top">↑</button>
+
+<script>
+  // Back to top visibility
+  const btn = document.querySelector('.back-to-top');
+  window.addEventListener('scroll', () => {
+    btn.classList.toggle('visible', window.scrollY > 400);
+  });
+
+  // Close sidebar on mobile when clicking a link
+  document.querySelectorAll('.sidebar a').forEach(link => {
+    link.addEventListener('click', () => {
+      if (window.innerWidth <= 900) {
+        document.querySelector('.sidebar').classList.remove('open');
+      }
+    });
+  });
+</script>
+</body>
+</html>
